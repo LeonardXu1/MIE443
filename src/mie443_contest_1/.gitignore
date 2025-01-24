@@ -1,0 +1,17 @@
+*.log
+*.tmp
+
+*.DS_Store
+Thumbs.db
+
+*.o
+*.so
+*.out
+
+__pycache__/
+*.pyc
+
+node_modules/
+npm-debug.log
+
+.env
