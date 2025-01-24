@@ -1,2 +1,0 @@
-MIE443/mie443_contest_1:beginner_tutorials
--DCATKIN_DEVEL_PREFIX=/home/leo/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/leo/catkin_ws/install -G Unix Makefiles
