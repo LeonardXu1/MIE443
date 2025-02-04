@@ -8,7 +8,7 @@
 #include "../include/rConfig.h"
 #include "../include/stateMachine.h"
 #include "../include/bumper.h"
-
+#include "stuck.h"
 state robotState = CYCLE_STATE;
 
 //Odom variable
