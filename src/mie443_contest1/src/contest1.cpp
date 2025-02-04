@@ -11,9 +11,9 @@
 
 state robotState = CYCLE_STATE;
 
+velo velocity;
+
 //Odom variable
-float ANGULAR = 0.0;
-float LINEAR = 0.0;
 float posX = 0.0, posY = 0.0, yaw = 0.0;
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg){
@@ -42,18 +42,20 @@ int main(int argc, char **argv)
     start = std::chrono::system_clock::now();
     uint64_t secondsElapsed = 0;
 
-    float angular = 0.0;
-    float linear = 0.0;
-
     while(ros::ok() && secondsElapsed <= 480) {
         ros::spinOnce();
 
-        if(bumperState() == true) {
+        if(isBumperPressed() == true) {
             setState(BUMPER_STATE);
         }
 
-        vel.angular.z = ANGULAR;
-        vel.linear.x = LINEAR;
+
+        if(robotState == BUMPER_STATE){
+            velocity = bumperState();
+        }
+
+        vel.angular.z = velocity.angular;
+        vel.linear.x = velocity.linear;
         vel_pub.publish(vel);
 
         // The last thing to do is to update the timer.

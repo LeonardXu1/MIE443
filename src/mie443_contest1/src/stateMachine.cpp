@@ -15,24 +15,23 @@ state getState(){
     return currState;
 }
 
-void bumperState(){
-    ROS_INFO("Bumper State");
+velo bumperState(){
+    velo velocity;
+    velocity.linear = 0.0;
+    velocity.angular = 0.0;
+    return velocity;
 }
 
-void exploreState(){
-    ROS_INFO("Explore State");
-}
+
 
 //checks and changes the state of the robot
 void setState(state newState){
     if(newState != currState && checkPriority(newState, currState)){ // checks if the new state is "new" and the priority of the new state
         if(newState == BUMPER_STATE){
             currState = BUMPER_STATE;
-            bumperState();
         }
         if(newState == EXPLORE_STATE){
             currState = EXPLORE_STATE;
-            exploreState();
         }
     }
 }

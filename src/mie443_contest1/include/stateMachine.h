@@ -3,8 +3,11 @@
 
 #include "rConfig.h"
 
-void setState(state newState); // Checks if new state should be set and sets it
 
 state getState(); // gets the current state
+
+velo bumperState();
+
+void setState(state newState); // Checks if new state should be set and sets it
 
 #endif

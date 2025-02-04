@@ -23,5 +23,12 @@ const float FAST_ANGULAR = M_PI/6; // must not exceed PI/6rad/s
 // Robot Set Distances
 const float WALL_CAUTION_DISTANCE = 0.1;
 
+// creates a structure for angular and linear velociti
+struct velo {
+    float angular = 0.0;
+    float linear = 0.0;
+};
+typedef struct velo velo;
+
 #endif
 
