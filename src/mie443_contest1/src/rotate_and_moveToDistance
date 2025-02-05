@@ -1,0 +1,85 @@
+#include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
+#include <tf/transform_datatypes.h>
+#include <ros/ros.h>
+#include <cmath>
+
+// Global variables for odometry
+float posX = 0.0, posY = 0.0, yaw = 0.0;
+
+void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
+    posX = msg->pose.pose.position.x;
+    posY = msg->pose.pose.position.y;
+    yaw = tf::getYaw(msg->pose.pose.orientation);
+}
+
+// Function to rotate the robot to a specified angle
+template<typename T>
+T normalizeAngle(T angle) {
+    while (angle > M_PI) angle -= 2 * M_PI;
+    while (angle < -M_PI) angle += 2 * M_PI;
+    return angle;
+}
+
+void turnToAngle(ros::Publisher& vel_pub, float targetYaw) {
+    geometry_msgs::Twist vel_msg;
+    ros::Rate rate(10); // 10 Hz loop rate
+
+    while (ros::ok()) {
+        float angleError = normalizeAngle(targetYaw - yaw);
+        if (fabs(angleError) < 0.01) { // Threshold for stopping
+            break;
+        }
+
+        vel_msg.angular.z = std::min(std::max(angleError, -0.5f), 0.5f); // Limit turning speed
+        vel_pub.publish(vel_msg);
+
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    // Stop rotation
+    vel_msg.angular.z = 0.0;
+    vel_pub.publish(vel_msg);
+}
+
+// Function to move the robot to a specified distance within a given time
+void moveToDistance(ros::Publisher& vel_pub, float distance, float time) {
+    geometry_msgs::Twist vel_msg;
+    ros::Rate rate(10); // 10 Hz loop rate
+
+    // Calculate target position
+    float targetX = posX + distance * cos(yaw);
+    float targetY = posY + distance * sin(yaw);
+    float targetYaw = atan2(targetY - posY, targetX - posX);
+
+    // Turn to face the correct direction
+    turnToAngle(vel_pub, targetYaw);
+
+    float startTime = ros::Time::now().toSec();
+    float elapsedTime = 0.0;
+
+    while (ros::ok() && elapsedTime < time) {
+        float dx = targetX - posX;
+        float dy = targetY - posY;
+        float remainingDistance = sqrt(dx * dx + dy * dy);
+
+        // Proportional velocity control
+        float velocity = std::min(remainingDistance / (time - elapsedTime), 0.2f); // Max speed limit
+
+        if (remainingDistance < 0.01) { // Threshold for stopping
+            break;
+        }
+
+        vel_msg.linear.x = velocity;
+        vel_pub.publish(vel_msg);
+
+        ros::spinOnce();
+        rate.sleep();
+        elapsedTime = ros::Time::now().toSec() - startTime;
+    }
+
+    // Stop the robot after reaching the target
+    vel_msg.linear.x = 0.0;
+    vel_pub.publish(vel_msg);
+}
