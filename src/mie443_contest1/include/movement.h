@@ -10,18 +10,18 @@
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
 
-posi getAbsPos();
+posS getAbsPos();
 
 void savePos();
 
-velo getVelocity();
+velS getVelocity();
 
-bool moveDistance(float distance, float speed, bool forward);
+bool moveDistance(float distance, float speed, int direction);
 
-bool moveAngle(float angle, float speed, bool CW);
+bool moveAngle(float angle, float speed, int direction);
 
-void moveLinearSpeed(float speed);
+void moveLinearSpeed(float speed, int direction);
 
-void moveAngularSpeed(float speed);
+void moveAngularSpeed(float speed, int direction);
 
 #endif

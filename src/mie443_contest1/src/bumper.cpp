@@ -32,3 +32,31 @@ bool isBumperPressed() {
     }
     return false;
 }
+
+void bumperBehaviour(){
+    bool taskComplete;
+    int step = getStep();
+    if(step == 0){
+        savePos();
+        takeStep();
+    }
+    else if(step == 1) {
+        taskComplete = moveDistance(0.1, SLOW_LINEAR, BACKWARD);
+        if(taskComplete){
+            takeStep();
+        }
+    }
+    else if(step == 2){
+        savePos();
+        takeStep();
+    }
+    else if(step == 3) {
+        taskComplete = moveAngle(M_PI/2, SLOW_ANGULAR, CW);
+        if(taskComplete){
+            takeStep();
+        }
+    }
+    else {
+        resetState();
+    }
+}

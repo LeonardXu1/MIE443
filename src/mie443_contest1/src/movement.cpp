@@ -1,9 +1,9 @@
 #include "../include/movement.h"
 
 // Odometry and Speed
-posi posAbs;
-posi posSave;
-velo vel;
+posS posAbs;
+posS posSave;
+velS vel;
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg){
     posAbs.x = msg->pose.pose.position.x;
@@ -12,7 +12,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr& msg){
     // ROS_INFO("Position: (%f,%f) Orientation:%frad or%fdegrees.", posAbs.x, posAbs.y, posAbs.yaw, RAD2DEG(posAbs.yaw));
 }
 
-posi getAbsPos(){
+posS getAbsPos(){
     return posAbs;
 }
 
@@ -20,22 +20,22 @@ void savePos(){
     posSave = posAbs;
 }
 
-velo getVelocity(){
+velS getVelocity(){
     return vel;
 }
 
-float calcDistance(posi pos1, posi pos2){
+float calcDistance(posS pos1, posS pos2){
     float dx = pos2.x - pos1.x;
     float dy = pos2.y - pos1.y;
     float distance = sqrt(dx*dx + dy*dy);
     return distance;
 }
 
-float calcRotation(posi pos1, posi pos2, bool CW){
+float calcRotation(posS pos1, posS pos2, int direction){ // rotation calculation is incorrect
     float yaw1;
     float yaw2;
     float rotation;
-    if(CW){
+    if(direction == CW){
         yaw1 = pos1.yaw;
         yaw2 = pos2.yaw;
     }
@@ -53,45 +53,35 @@ float calcRotation(posi pos1, posi pos2, bool CW){
     return rotation;
 }
 
-bool moveDistance(float distance, float speed, bool forward) {
+bool moveDistance(float distance, float speed, int direction) {
     float travel = calcDistance(posSave, posAbs);
     if(travel >= distance){
         vel.linear = 0.0;
         return true;
     }
 
-    if(forward){
-        vel.linear = speed;
-    }
-    else{
-        vel.linear = -speed;
-    }
+    vel.linear = speed*direction;
     return false;
 }
 
-bool moveAngle(float angle, float speed, bool CW){ // does not support rotation >= 360deg
-    float travel = calcRotation(posSave, posAbs, CW);
+bool moveAngle(float angle, float speed, int direction){ // does not support rotation >= 360deg
+    float travel = calcRotation(posSave, posAbs, direction);
 
     if(travel >= angle){
         vel.angular = 0.0;
         return true;
     }
 
-    if(CW){
-        vel.angular = speed;
-    }
-    else{
-        vel.angular = -speed;
-    }
+    vel.angular = speed*direction;
     return false;
 }
 
-void moveLinearSpeed(float speed){
-    vel.linear = speed;
+void moveLinearSpeed(float speed, int direction){
+    vel.linear = speed*direction;
 }
 
-void moveAngularSpeed(float speed){
-    vel.angular = speed;
+void moveAngularSpeed(float speed, int direction){
+    vel.angular = speed*direction;
 }
 
 

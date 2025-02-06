@@ -7,8 +7,30 @@
 #include "../include/rConfig.h"
 #include "../include/stateMachine.h"
 #include "../include/bumper.h"
+#include "../include/behaviour.h"
 
-velo velocity;
+// intiates a velocity structure
+velS velocity;
+
+// calls the behaviour function related to the state
+void runBehaviour(state curState){
+    if(curState == BUMPER_STATE){
+        bumperBehaviour();
+    }
+    else if(curState == EXPLORE_STATE){
+        exploreBehaviour();
+    }
+}
+
+// Logic for changing states
+void decisionMaker(){
+    if(isBumperPressed() == true) { // checks if any bumpers are pressed
+        setState(BUMPER_STATE);
+    }
+    else { // default state
+        setState(EXPLORE_STATE);
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -22,7 +44,7 @@ int main(int argc, char **argv)
     ros::Subscriber odom = nh.subscribe("odom", 1, &odomCallback);
     ros::Rate loop_rate(10);
 
-    geometry_msgs::Twist velT; //twist class
+    geometry_msgs::Twist vel; //twist class
 
     // contest count down timer
     std::chrono::time_point<std::chrono::system_clock> start;//timer
@@ -31,24 +53,23 @@ int main(int argc, char **argv)
 
     while(ros::ok() && secondsElapsed <= 480) {
         ros::spinOnce();
-        
-        if(isBumperPressed() == true) {
-            setState(BUMPER_STATE);
-        }
-        else{
-            setState(EXPLORE_STATE);
-        }
 
-        updateState();
+        // decides which state to be in
+        decisionMaker();
+
+        // runs the behaviour related to the state
+        state curState = getState();
+        runBehaviour(curState);
 
         velocity = getVelocity();
 
         ROS_INFO("State: %s", stateName[getState()].c_str());
         // ROS_INFO("Linear Velocity: %0.2f   | Angular Velocity: %0.2f", velocity.linear, velocity.angular);
 
-        velT.angular.z = velocity.angular;
-        velT.linear.x = velocity.linear;
-        vel_pub.publish(velT);
+        //sets the robot velocity
+        vel.angular.z = velocity.angular;
+        vel.linear.x = velocity.linear;
+        vel_pub.publish(vel);
 
         // The last thing to do is to update the timer.
         secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
