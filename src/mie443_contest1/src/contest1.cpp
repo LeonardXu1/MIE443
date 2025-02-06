@@ -1,27 +1,14 @@
 #include <geometry_msgs/Twist.h>
-#include <nav_msgs/Odometry.h>
-#include <tf/transform_datatypes.h>
 #include <stdio.h>
 #include <cmath>
 #include <chrono>
+#include <cstring>
 
 #include "../include/rConfig.h"
 #include "../include/stateMachine.h"
 #include "../include/bumper.h"
 
-state robotState = CYCLE_STATE;
-
 velo velocity;
-
-//Odom variable
-float posX = 0.0, posY = 0.0, yaw = 0.0;
-
-void odomCallback(const nav_msgs::Odometry::ConstPtr& msg){
-    posX = msg->pose.pose.position.x;
-    posY = msg->pose.pose.position.y;
-    yaw = tf::getYaw(msg->pose.pose.orientation);
-    ROS_INFO("Position: (%f,%f) Orientation:%frad or%fdegrees.", posX, posY, yaw, RAD2DEG(yaw));
-}
 
 int main(int argc, char **argv)
 {
@@ -35,7 +22,7 @@ int main(int argc, char **argv)
     ros::Subscriber odom = nh.subscribe("odom", 1, &odomCallback);
     ros::Rate loop_rate(10);
 
-    geometry_msgs::Twist vel; //twist class
+    geometry_msgs::Twist velT; //twist class
 
     // contest count down timer
     std::chrono::time_point<std::chrono::system_clock> start;//timer
@@ -44,19 +31,24 @@ int main(int argc, char **argv)
 
     while(ros::ok() && secondsElapsed <= 480) {
         ros::spinOnce();
-
+        
         if(isBumperPressed() == true) {
             setState(BUMPER_STATE);
         }
-
-
-        if(robotState == BUMPER_STATE){
-            velocity = bumperState();
+        else{
+            setState(EXPLORE_STATE);
         }
 
-        vel.angular.z = velocity.angular;
-        vel.linear.x = velocity.linear;
-        vel_pub.publish(vel);
+        updateState();
+
+        velocity = getVelocity();
+
+        ROS_INFO("State: %s", stateName[getState()].c_str());
+        // ROS_INFO("Linear Velocity: %0.2f   | Angular Velocity: %0.2f", velocity.linear, velocity.angular);
+
+        velT.angular.z = velocity.angular;
+        velT.linear.x = velocity.linear;
+        vel_pub.publish(velT);
 
         // The last thing to do is to update the timer.
         secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
