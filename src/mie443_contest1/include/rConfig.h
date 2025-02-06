@@ -12,8 +12,8 @@
 const uint8_t N_BUMPER = 3;
 
 // defines the possible robot states and priority
-enum state {BUMPER_STATE = 0, EXPLORE_STATE = 1, CYCLE_STATE = 2};
-const std::string stateName[] = {"BUMPER_STATE", "EXPLORE_STATE", "CYCLE_STATE"};
+enum state {BUMPER_STATE = 0, RANDOM_STATE = 1, EXPLORE_STATE = 2, CYCLE_STATE = 3};
+const std::string stateName[] = {"BUMPER_STATE", "RANDOM_STATE", "EXPLORE_STATE", "CYCLE_STATE"};
 
 const int FORWARD = 1;
 const int BACKWARD = -1;
