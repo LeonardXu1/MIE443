@@ -8,6 +8,7 @@
 #include "../include/stateMachine.h"
 #include "../include/bumper.h"
 #include "../include/behaviour.h"
+#include "../include/scanning.h"
 
 // intiates a velocity structure
 velS velocity;

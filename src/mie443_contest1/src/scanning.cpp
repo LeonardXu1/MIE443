@@ -1,6 +1,8 @@
 
 // function to extract all the important laserscan data which we'll be able to reference later easily for calculations
-void extractLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
+#include "../include/scanning.h"
+#include "../include/movement.h"
+LaserData extractLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
     LaserData dat;
     dat.angle_min = msg->angle_min;
@@ -27,34 +29,35 @@ void processLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
     // }
     LaserData dat = extractLaserData(msg);          //gives me access to the extracted laser scan info function so that i don't have to reference the  
 
-    maxLaserDist = -std::numeric_limits<float>::infinity()
+    float maxLaserDist = -std::numeric_limits<float>::infinity();
     int maxLaserIdx = -1;               //set to -1 to be a placeholder for "no valid index"
-    float maxLaserAngle = 0;
+    float maxLaserAngle = 0.0f;
     bool passageblocked;
     int leftBoundIdx, rightBoundIdx;
     float leftBoundDist, rightBoundDist;
-    float robotWidth = 10               //  must change this depending on units and actual width. also currently unsure if rounding will be an error 
+    float robotWidth = 10;               //  must change this depending on units and actual width. also currently unsure if rounding will be an error 
     
-    for (uint32_t laser_idx = 0; laser_idx < nLasers; ++ laser_idx){        //cycle through all laser distances and store the max distance and corresponding index, as well as index's angle
+    for (uint32_t laser_idx = 0; laser_idx < dat.nLasers; ++ laser_idx)
+        {        //cycle through all laser distances and store the max distance and corresponding index, as well as index's angle
             if (dat.ranges[laser_idx] > maxLaserDist){
                 maxLaserDist = dat.ranges[laser_idx];
                 maxLaserIdx = laser_idx;
                 maxLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
 
-                // float dhalfAngle = atan((robotWidth / 2) / maxLaserDist)
-                // leftBoundIdx = std::round((maxLaserAngle + dhalfAngle) / dat.angle_increment)          // again i don't know the directions of the max and min angles 
-                // rightBoundIdx = std::round((maxLaserAngle - dhalfAngle) / dat.angle_increment)         // see above comment ^ need to think about whether to round up or down depending
+                float dhalfAngle = atan((robotWidth / 2) / maxLaserDist);
+                leftBoundIdx = std::round((maxLaserAngle + dhalfAngle) / dat.angle_increment);          // again i don't know the directions of the max and min angles 
+                rightBoundIdx = std::round((maxLaserAngle - dhalfAngle) / dat.angle_increment);         // see above comment ^ need to think about whether to round up or down depending
                 
     
-                // leftBoundDist = dat.ranges[leftBoundIdx]                   // corresponding distances to bound indices
-                // rightBoundDist = dat.ranges[rightBoundIdx]
+                leftBoundDist = dat.ranges[leftBoundIdx];                   // corresponding distances to bound indices
+                rightBoundDist = dat.ranges[rightBoundIdx];
 
-                // float thresholdUpper = maxLaserDist * 1.1
-                // float thresholdLower = maxLaserDist * .9
+                float thresholdUpper = maxLaserDist * 1.1;
+                float thresholdLower = maxLaserDist * .9;
 
-                // for (uint32_t laser_idx = leftBoundIdx; laser_idx < rightBoundIdx; ++laser_idx){
-                //     if (dat.range[laser_idx] > thresholdUpper || dat.range[laser_idx] < thresholdLower){
-                //         passageblocked = true;
+                for (uint32_t laser_idx = leftBoundIdx; laser_idx < rightBoundIdx; ++laser_idx){
+                    if (dat.ranges[laser_idx] > thresholdUpper || dat.ranges[laser_idx] < thresholdLower){
+                        passageblocked = true;
                 //         break;
                     }
                 }
@@ -62,15 +65,23 @@ void processLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
                 
             }
         }
-}
-
-void scanningBehaviour(){
     if (maxLaserAngle < 0){
-            moveAngle(maxLaserAngle, SLOW_ANGULAR, CW)
+            moveAngle(maxLaserAngle, SLOW_ANGULAR, CW);
         }
         else {
-            moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW)
+            moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW);
         }
         
-        moveDistance(maxLaserDist, SLOW_LINEAR, BACKWARD)
+        moveDistance(maxLaserDist, SLOW_LINEAR, BACKWARD);
 }
+
+// void scanningBehaviour(float maxLaserAngle, float maxLaserDist){
+//     if (maxLaserAngle < 0){
+//             moveAngle(maxLaserAngle, SLOW_ANGULAR, CW)
+//         }
+//         else {
+//             moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW)
+//         }
+        
+//         moveDistance(maxLaserDist, SLOW_LINEAR, BACKWARD)
+// }

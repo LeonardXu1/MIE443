@@ -13,11 +13,11 @@ struct LaserData {
     float range_min;
     float range_max;
     int nLasers;
-    std::vector<float> ranges;  // Stores all laser distance readings
+    std::vector<float> ranges; // Stores all laser distance readings
 };
 
-LaserData extractLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
-void processLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
+LaserData extractLaserData(const sensor_msgs::LaserScan::ConstPtr& msg);
+void processLaserData(const sensor_msgs::LaserScan::ConstPtr& msg);
 void scanningBehaviour();
 
-void 
+#endif
