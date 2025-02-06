@@ -6,5 +6,6 @@
 #include "movement.h"
 
 void exploreBehaviour(); // runs a basic command to  move forward
+void randomBehaviour();
 
 #endif
