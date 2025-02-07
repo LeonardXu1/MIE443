@@ -79,7 +79,7 @@ void scanningBehaviour(){
     }
     else if(step ==  2){
         if (maxLaserAngle < 0){
-            taskComplete = moveAngle(maxLaserAngle, SLOW_ANGULAR, CW);
+            taskComplete = moveAngle(-maxLaserAngle, SLOW_ANGULAR, CW);
         }
         else {
             taskComplete = moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW);
