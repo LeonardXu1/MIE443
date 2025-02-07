@@ -8,7 +8,7 @@
 #include "../include/stateMachine.h"
 #include "../include/bumper.h"
 #include "../include/behaviour.h"
-
+#include "../include/stuck.h"
 // intiates a velocity structure
 velS velocity;
 
@@ -17,15 +17,21 @@ void runBehaviour(state curState){
     if(curState == BUMPER_STATE){
         bumperBehaviour();
     }
+    // else if(curState==STUCK_STATE){
+    //     stuckDetector.stuckBehaviour();
+    // }
     else if(curState == EXPLORE_STATE){
         exploreBehaviour();
     }
 }
-
+stuckDetect stuckDetector;//can delete later once we delete the class
 // Logic for changing states
-void decisionMaker(){
+void decisionMaker(double timeElapsed){
     if(isBumperPressed() == true) { // checks if any bumpers are pressed
         setState(BUMPER_STATE);
+    }
+    else if(stuckDetector.checkIfStuck(getAbsPos(), timeElapsed)==true){
+        setState(STUCK_STATE);
     }
     else { // default state
         setState(EXPLORE_STATE);
@@ -55,15 +61,16 @@ int main(int argc, char **argv)
         ros::spinOnce();
 
         // decides which state to be in
-        decisionMaker();
+        decisionMaker(secondsElapsed);
 
         // runs the behaviour related to the state
         state curState = getState();
+         ROS_INFO("State: %s", stateName[getState()].c_str());
         runBehaviour(curState);
 
         velocity = getVelocity();
 
-        ROS_INFO("State: %s", stateName[getState()].c_str());
+       
         // ROS_INFO("Linear Velocity: %0.2f   | Angular Velocity: %0.2f", velocity.linear, velocity.angular);
 
         //sets the robot velocity

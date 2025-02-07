@@ -32,25 +32,44 @@ float calcDistance(posS pos1, posS pos2){
 }
 
 float calcRotation(posS pos1, posS pos2, int direction){ // rotation calculation is incorrect
-    float yaw1;
-    float yaw2;
+    float yaw1 = pos1.yaw;
+    float yaw2 = pos2.yaw;
     float rotation;
-    if(direction == CW){
-        yaw1 = pos1.yaw;
-        yaw2 = pos2.yaw;
+
+    if(yaw1 < 0){
+        yaw1 += M_PI*2;
     }
-    else{
-        yaw1 = pos2.yaw;
-        yaw2 = pos1.yaw;
+    if(yaw2 < 0){
+        yaw2 += M_PI*2;
     }
 
-    if(yaw1 > yaw2){
-        rotation = (M_PI*2) - yaw1 + yaw2;
+    if(direction == CCW){
+        if(yaw1 <= yaw2){
+            rotation = yaw2 - yaw1;
+        }
+        else {
+            rotation = (M_PI*2) - yaw1 + yaw2;
+        }
     }
     else{
-        rotation = yaw2 - yaw1;
+        if(yaw1 >= yaw2){
+            rotation = yaw1 - yaw2;
+        }
+        else{
+            rotation = (M_PI*2) - yaw2 + yaw1;
+        }
     }
+
     return rotation;
+}
+
+bool angleTolerance(posS pos1, posS pos2){
+    float yaw1 = pos1.yaw;
+    float yaw2 = pos2.yaw;
+    if(abs(yaw1-yaw2) > 0.02){
+        return true;
+    }
+    return false;
 }
 
 bool moveDistance(float distance, float speed, int direction) {
@@ -66,8 +85,12 @@ bool moveDistance(float distance, float speed, int direction) {
 
 bool moveAngle(float angle, float speed, int direction){ // does not support rotation >= 360deg
     float travel = calcRotation(posSave, posAbs, direction);
+    float traveldeg = RAD2DEG(travel);
+    float yawSave = RAD2DEG(posSave.yaw);
+    float yawCurr = RAD2DEG(posAbs.yaw);
 
-    if(travel >= angle){
+    // ROS_INFO("To Travel: %0.2f  | intial: %f | curr: %f", traveldeg, yawSave, yawCurr);
+    if(travel >= angle && angleTolerance(posSave, posAbs)){
         vel.angular = 0.0;
         return true;
     }
@@ -83,5 +106,7 @@ void moveLinearSpeed(float speed, int direction){
 void moveAngularSpeed(float speed, int direction){
     vel.angular = speed*direction;
 }
+
+
 
 

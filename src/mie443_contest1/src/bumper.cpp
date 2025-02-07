@@ -1,7 +1,7 @@
 #include "../include/bumper.h"
 
 uint8_t bumper[3]={kobuki_msgs::BumperEvent::RELEASED,kobuki_msgs::BumperEvent::RELEASED,kobuki_msgs::BumperEvent::RELEASED};
-
+std::string bumperPosition;
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg)
 {
 	bumper[msg->bumper]=msg->state;
@@ -32,16 +32,29 @@ bool isBumperPressed() {
     }
     return false;
 }
+std::string savedBumperPosition(){
+    if(isBumperPressed()==true){
+    bumperPosition=bumperPressedPosition();
+    }
+  
+    
+    return bumperPosition;
+
+}
 
 void bumperBehaviour(){
     bool taskComplete;
     int step = getStep();
     if(step == 0){
+     
+        savedBumperPosition();
         savePos();
         takeStep();
+       
     }
     else if(step == 1) {
         taskComplete = moveDistance(0.1, SLOW_LINEAR, BACKWARD);
+        
         if(taskComplete){
             takeStep();
         }
@@ -49,14 +62,54 @@ void bumperBehaviour(){
     else if(step == 2){
         savePos();
         takeStep();
+        
     }
     else if(step == 3) {
-        taskComplete = moveAngle(M_PI/2, SLOW_ANGULAR, CW);
-        if(taskComplete){
+        if(savedBumperPosition()=="LEFT")
+        {    ROS_INFO("left bumper got pressed");
+            taskComplete = moveAngle(M_PI/4, SLOW_ANGULAR, CW);
+            if(taskComplete){
             takeStep();
         }
+           
+        }
+
+        else if(savedBumperPosition()=="RIGHT"){
+             ROS_INFO("right bumper got pressed");
+            taskComplete = moveAngle(M_PI/4, SLOW_ANGULAR, CCW);
+               if(taskComplete){
+            takeStep();
+        }
+            
+        }
+        else if(savedBumperPosition()=="CENTER"){
+            ROS_INFO("center bumper got pressed");
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<int>dis(-1,1);
+            int randomNum=dis(gen);
+           while(randomNum==0){
+            //randomNum=dis(gen);
+            if(randomNum!=0){
+                break;
+            }
+            else{
+                randomNum=dis(gen);
+            }
+            }
+            ROS_INFO("%i",randomNum);
+            taskComplete = moveAngle(M_PI/2, SLOW_ANGULAR, randomNum);
+             takeStep();
+            if(taskComplete){
+            ROS_INFO("TAKING NEXT STEP");
+           
+        }
+            
+        }
+     
     }
     else {
+        ROS_INFO("RESET STATE");
         resetState();
     }
 }

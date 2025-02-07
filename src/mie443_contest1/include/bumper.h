@@ -3,7 +3,9 @@
 
 #include <kobuki_msgs/BumperEvent.h>
 #include <string>
+#include <iostream>
 
+#include <random>
 #include "rConfig.h"
 #include "stateMachine.h"
 #include "movement.h"
@@ -15,5 +17,6 @@ std::string bumperPressedPosition(); // checks which bumper is pressed "LEFT" "R
 bool isBumperPressed(); // returns true if any bumper is pressed
 
 void bumperBehaviour();
+std::string savedBumperPosition();
 
 #endif
