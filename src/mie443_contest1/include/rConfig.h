@@ -1,3 +1,4 @@
+
 #ifndef ROBOT_CONFIG
 #define ROBOT_CONFIG
 
@@ -11,8 +12,13 @@
 const uint8_t N_BUMPER = 3;
 
 // defines the possible robot states and priority
-enum state {BUMPER_STATE = 0, EXPLORE_STATE = 10, STUCK_STATE = 1, CAUTION_STATE = 5, START_STATE = 10, CYCLE_STATE = 20};
+enum state {STUCK_STATE=0,BUMPER_STATE = 1, EXPLORE_STATE = 2, CYCLE_STATE = 3};
+const std::string stateName[] = {"STUCK_STATE","BUMPER_STATE", "EXPLORE_STATE", "CYCLE_STATE"};
 
+const int FORWARD = 1;
+const int BACKWARD = -1;
+const int CW = -1;
+const int CCW = 1;
 
 // Robot Set Speeds
 const float SLOW_LINEAR = 0.1;
@@ -24,4 +30,5 @@ const float FAST_ANGULAR = M_PI/6; // must not exceed PI/6rad/s
 const float WALL_CAUTION_DISTANCE = 0.1;
 
 #endif
+
 

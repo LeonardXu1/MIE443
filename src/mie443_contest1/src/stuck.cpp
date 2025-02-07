@@ -1,46 +1,46 @@
-#include "stuck.h"
+#include "../include/stuck.h"
 
-stuckDetect::stuckDetect() : state(EXPLORE),
+stuckDetect::stuckDetect() : 
                              isStuck(false),
-                             prevX(0),
-                             prevY(0),
-                             startCounting(false),
-                             recoveryDir(1)
+                             
+                             startCounting(false)
 {
     prevTime = ros::Time(0);//initialize timer 
 }
-
-bool stuckDetect::checkIfStuck(double currentX, double currentY)
+posS prevPos;
+double notMovingTime;
+bool stuckDetect::checkIfStuck(posS currPos, double timeElapsed)
 {
-    int iter=0;
-    bool sus=false;
-    ros::Time currentTime = ros::Time::now();
 
-    if (prevTime == ros::Time(0))
-    {
-        prevTime = currentTime;
-        prevX = currentX;
-        prevY = currentY;
-        return false;//timer initialization
-    }
-    while(iter<=100){
-    double distanceMoved = std::sqrt(std::pow(currentX - prevX, 2) + std::pow(currentY - prevY, 2));//Calculate disctance moved 
+    bool sus=false;
+    // ros::Time currentTime = ros::Time::now();
+
+    // if (prevTime == ros::Time(0))
+    // {
+    //     prevTime = currentTime;
+    //     prevPos.x=currPos.x;
+    //     prevPos.y=currPos.y;
+    //     return false;//timer initialization
+    // }
+    
+    double distanceMoved = std::sqrt(std::pow(currPos.x - prevPos.x, 2) + std::pow(currPos.y - prevPos.y, 2));//Calculate disctance moved 
     if (distanceMoved <= stuckDist)
     {
         if (!startCounting)
         {
             startCounting = true;
-            notMoving = currentTime;//start counting time when robot is moving in a small step 
+            notMovingTime = timeElapsed;//start counting time when robot is moving in a small step 
             ROS_INFO("start not moving big");
             sus=true;
         if(isStuck==false&&sus==true)
-        {
-            double timeNoMoving = (currentTime - notMoving).toSec();
-            if (timeNoMoving >= stuckTime && !isStuck)//if robot continuously moving small step for 2s(can be tuned), identify it might got stuck 
+        { 
+           
+            double timeNoMoving = (timeElapsed - notMovingTime);
+            if (timeNoMoving >= stuckTime)//if robot continuously moving small step for 2s(can be tuned), identify it might got stuck 
             {
                 ROS_WARN("robot prob got stuck");
                 isStuck = true;
-                state = STUCK;
+                
             }
         }
         }
@@ -51,7 +51,7 @@ bool stuckDetect::checkIfStuck(double currentX, double currentY)
         {
             startCounting = false;
             isStuck = false;
-            state = EXPLORE;
+            
         }
 
     //    double timeDiff=(currentTime-prevTime).toSec();
@@ -65,33 +65,59 @@ bool stuckDetect::checkIfStuck(double currentX, double currentY)
 
     //         }
 
-    prevX = currentX;
-    prevY = currentY;
-    prevTime = currentTime;
-    iter++;
-    ROS_INFO("%i",iter);
+    prevPos.x = currPos.x;
+    prevPos.y = currPos.y;
+    //prevTime = currentTime;
+    
+   
     // }
 
     return isStuck;
+
 }
-}
-void stuckDetect::solveStuck(uint8_t stuckState)
+void stuckDetect::stuckBehaviour()
 {
-    if (stuckState == STUCK)//adjustment if it is identified as stuck 
-    {
-        odo_response_cmd.linear.x = recoverVel;
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> dis(0, 1);
-        int rand = dis(gen);
-        odo_response_cmd.angular.z = (rand == 0) ? M_PI / 2 : -M_PI / 2;
-        ROS_INFO("done adjusting");
-        state = EXPLORE;
+    bool taskComplete;
+    int step = getStep();
+    if(step == 0){
+        savePos();
+        takeStep();
     }
-    else
-    {
-        ROS_INFO("exit stuck state, to explore state");
-        isStuck = false;
-        state=EXPLORE;
+    else if(step == 1) {
+        taskComplete = moveDistance(0.1, SLOW_LINEAR, BACKWARD);
+        if(taskComplete){
+            takeStep();
+        }
+    }
+    else if(step == 2){
+        savePos();
+        takeStep();
+    }
+    else if(step == 3) {
+         
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<int>dis(-1,1);
+            int randomNum=dis(gen);
+           while(randomNum==0){
+            //randomNum=dis(gen);
+            if(randomNum!=0){
+                break;
+            }
+            else{
+                randomNum=dis(gen);
+            }
+            }
+            ROS_INFO("%i",randomNum);
+            taskComplete = moveAngle(M_PI/2, SLOW_ANGULAR, randomNum);
+            takeStep();
+            if(taskComplete){
+            ROS_INFO("TAKING NEXT STEP");
+           
+        }
+    }
+    else {
+        resetState();
+        
     }
 }

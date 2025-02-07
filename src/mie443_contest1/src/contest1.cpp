@@ -8,19 +8,35 @@
 #include "../include/rConfig.h"
 #include "../include/stateMachine.h"
 #include "../include/bumper.h"
-#include "stuck.h"
-state robotState = CYCLE_STATE;
+#include "../include/behaviour.h"
+#include "../include/stuck.h"
+// intiates a velocity structure
+velS velocity;
 
-//Odom variable
-float ANGULAR = 0.0;
-float LINEAR = 0.0;
-float posX = 0.0, posY = 0.0, yaw = 0.0;
-
-void odomCallback(const nav_msgs::Odometry::ConstPtr& msg){
-    posX = msg->pose.pose.position.x;
-    posY = msg->pose.pose.position.y;
-    yaw = tf::getYaw(msg->pose.pose.orientation);
-    ROS_INFO("Position: (%f,%f) Orientation:%frad or%fdegrees.", posX, posY, yaw, RAD2DEG(yaw));
+// calls the behaviour function related to the state
+void runBehaviour(state curState){
+    if(curState == BUMPER_STATE){
+        bumperBehaviour();
+    }
+    // else if(curState==STUCK_STATE){
+    //     stuckDetector.stuckBehaviour();
+    // }
+    else if(curState == EXPLORE_STATE){
+        exploreBehaviour();
+    }
+}
+stuckDetect stuckDetector;//can delete later once we delete the class
+// Logic for changing states
+void decisionMaker(double timeElapsed){
+    if(isBumperPressed() == true) { // checks if any bumpers are pressed
+        setState(BUMPER_STATE);
+    }
+    else if(stuckDetector.checkIfStuck(getAbsPos(), timeElapsed)==true){
+        setState(STUCK_STATE);
+    }
+    else { // default state
+        setState(EXPLORE_STATE);
+    }
 }
 
 int main(int argc, char **argv)
@@ -48,12 +64,22 @@ int main(int argc, char **argv)
     while(ros::ok() && secondsElapsed <= 480) {
         ros::spinOnce();
 
-        if(bumperState() == true) {
-            setState(BUMPER_STATE);
-        }
+        // decides which state to be in
+        decisionMaker(secondsElapsed);
 
-        vel.angular.z = ANGULAR;
-        vel.linear.x = LINEAR;
+        // runs the behaviour related to the state
+        state curState = getState();
+         ROS_INFO("State: %s", stateName[getState()].c_str());
+        runBehaviour(curState);
+
+        velocity = getVelocity();
+
+       
+        // ROS_INFO("Linear Velocity: %0.2f   | Angular Velocity: %0.2f", velocity.linear, velocity.angular);
+
+        //sets the robot velocity
+        vel.angular.z = velocity.angular;
+        vel.linear.x = velocity.linear;
         vel_pub.publish(vel);
 
         // The last thing to do is to update the timer.
