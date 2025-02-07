@@ -19,7 +19,7 @@ void runBehaviour(state curState){
         bumperBehaviour();
     }
     else if(curState == EXPLORE_STATE){
-        exploreBehaviour();
+        scanningBehaviour();
     }
 }
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
 
     ros::Subscriber bumper_sub = nh.subscribe("mobile_base/events/bumper", 10, &bumperCallback); //declaration of subscribers from bumper
-    // ros::Subscriber laser_sub = nh.subscribe("scan", 10, &laserCallback);//from sensor
+    ros::Subscriber laser_sub = nh.subscribe("scan", 10, &laserCallback);//from sensor
 
     ros::Publisher vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/teleop", 1); //advertise wheel speed
     ros::Subscriber odom = nh.subscribe("odom", 1, &odomCallback);

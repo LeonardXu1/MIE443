@@ -5,6 +5,10 @@
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
 #include <cmath>
+#include "rConfig.h"
+#include "movement.h"
+#include "stateMachine.h"
+
 
 struct LaserData {
     float angle_min;
@@ -16,8 +20,8 @@ struct LaserData {
     std::vector<float> ranges; // Stores all laser distance readings
 };
 
-LaserData extractLaserData(const sensor_msgs::LaserScan::ConstPtr& msg);
-void processLaserData(const sensor_msgs::LaserScan::ConstPtr& msg);
+void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
+void processLaserData();
 void scanningBehaviour();
 
 #endif

@@ -1,10 +1,13 @@
 
 // function to extract all the important laserscan data which we'll be able to reference later easily for calculations
 #include "../include/scanning.h"
-#include "../include/movement.h"
-LaserData extractLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
+
+LaserData dat;
+float maxLaserDist;
+float maxLaserAngle;
+
+void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
-    LaserData dat;
     dat.angle_min = msg->angle_min;
     dat.angle_max = msg->angle_max;
     dat.angle_increment = msg->angle_increment;
@@ -16,22 +19,19 @@ LaserData extractLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
     
     // Store all laser readings
     dat.ranges = msg->ranges;  // Directly copying the vector
-    
-    return dat;
 }
 
 // Processing Laser Data 
-void processLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
+void processLaserData()
 {   
     // std::vector<float> laserDistVect;                                            //need to work on this to cycle through a sorted array of idx and distances
     // for (uint32_t laser_idx = 0; laser_idx < nLasers; ++ laser_idx){
     //     laserDistVect.push_back(msg->ranges[laser_idx])
     // }
-    LaserData dat = extractLaserData(msg);          //gives me access to the extracted laser scan info function so that i don't have to reference the  
-
-    float maxLaserDist = -std::numeric_limits<float>::infinity();
+    
+    maxLaserDist = -std::numeric_limits<float>::infinity();
+    maxLaserAngle = 0.0f;
     int maxLaserIdx = -1;               //set to -1 to be a placeholder for "no valid index"
-    float maxLaserAngle = 0.0f;
     bool passageblocked;
     int leftBoundIdx, rightBoundIdx;
     float leftBoundDist, rightBoundDist;
@@ -58,30 +58,50 @@ void processLaserData(const sensor_msgs::LaserScan::ConstPtr& msg)
                 for (uint32_t laser_idx = leftBoundIdx; laser_idx < rightBoundIdx; ++laser_idx){
                     if (dat.ranges[laser_idx] > thresholdUpper || dat.ranges[laser_idx] < thresholdLower){
                         passageblocked = true;
-                //         break;
                     }
                 }
-
-                
             }
         }
-    if (maxLaserAngle < 0){
-            moveAngle(maxLaserAngle, SLOW_ANGULAR, CW);
-        }
-        else {
-            moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW);
-        }
-        
-        moveDistance(maxLaserDist, SLOW_LINEAR, BACKWARD);
 }
 
-// void scanningBehaviour(float maxLaserAngle, float maxLaserDist){
-//     if (maxLaserAngle < 0){
-//             moveAngle(maxLaserAngle, SLOW_ANGULAR, CW)
-//         }
-//         else {
-//             moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW)
-//         }
+void scanningBehaviour(){
+
+
+    bool taskComplete;
+    int step = getStep();
+
+    if(step == 0){
+        processLaserData();
+        takeStep();
+    }
+    if(step == 1){
+        savePos();
+        takeStep();
+    }
+    else if(step ==  1){
+        if (maxLaserAngle < 0){
+            taskComplete = moveAngle(maxLaserAngle, SLOW_ANGULAR, CW);
+        }
+        else {
+            taskComplete = moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW);
+        }
+        if(taskComplete){
+            takeStep();
+        }
+    }
+    else if(step == 2){
+        savePos();
+        takeStep();
+    }
+    else if(step == 3){
+        taskComplete = moveDistance(maxLaserDist, SLOW_LINEAR, BACKWARD);
         
-//         moveDistance(maxLaserDist, SLOW_LINEAR, BACKWARD)
-// }
+        if(taskComplete){
+            takeStep();
+        }
+    }
+
+
+        
+
+}
