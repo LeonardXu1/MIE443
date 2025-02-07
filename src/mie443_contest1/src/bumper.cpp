@@ -99,7 +99,7 @@ void bumperBehaviour(){
             }
             ROS_INFO("%i",randomNum);
             taskComplete = moveAngle(M_PI/2, SLOW_ANGULAR, randomNum);
-             takeStep();
+            takeStep();
             if(taskComplete){
             ROS_INFO("TAKING NEXT STEP");
            

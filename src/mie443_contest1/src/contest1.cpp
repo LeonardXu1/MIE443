@@ -9,7 +9,7 @@
 #include "../include/bumper.h"
 #include "../include/behaviour.h"
 #include "../include/scanning.h"
-
+#include "../include/stuck.h"
 // intiates a velocity structure
 velS velocity;
 
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
         // runs the behaviour related to the state
         state curState = getState();
-         ROS_INFO("State: %s", stateName[getState()].c_str());
+        ROS_INFO("State: %s", stateName[getState()].c_str());
         runBehaviour(curState);
 
         velocity = getVelocity();
