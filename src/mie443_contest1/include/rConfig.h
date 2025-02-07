@@ -17,8 +17,8 @@ const std::string stateName[] = {"BUMPER_STATE", "RANDOM_STATE", "EXPLORE_STATE"
 
 const int FORWARD = 1;
 const int BACKWARD = -1;
-const int CW = 1;
-const int CCW = -1;
+const int CW = -1;
+const int CCW = 1;
 
 // Robot Set Speeds
 const float SLOW_LINEAR = 0.1;
