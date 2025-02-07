@@ -27,6 +27,7 @@ int getStep(){
 
 void takeStep(){
     step++;
+    ROS_INFO("Step: %i", step);
 }
 
 //checks and changes the state of the robot

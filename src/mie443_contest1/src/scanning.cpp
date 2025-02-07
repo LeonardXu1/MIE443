@@ -29,8 +29,8 @@ void processLaserData()
     //     laserDistVect.push_back(msg->ranges[laser_idx])
     // }
     
-    maxLaserDist = -std::numeric_limits<float>::infinity();
-    maxLaserAngle = 0.0f;
+    maxLaserDist = 0;
+    maxLaserAngle = 0.0;
     int maxLaserIdx = -1;               //set to -1 to be a placeholder for "no valid index"
     bool passageblocked;
     int leftBoundIdx, rightBoundIdx;
@@ -44,41 +44,40 @@ void processLaserData()
                 maxLaserIdx = laser_idx;
                 maxLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
 
-                float dhalfAngle = atan((robotWidth / 2) / maxLaserDist);
-                leftBoundIdx = std::round((maxLaserAngle + dhalfAngle) / dat.angle_increment);          // again i don't know the directions of the max and min angles 
-                rightBoundIdx = std::round((maxLaserAngle - dhalfAngle) / dat.angle_increment);         // see above comment ^ need to think about whether to round up or down depending
+                // float dhalfAngle = atan((robotWidth / 2) / maxLaserDist);
+                // leftBoundIdx = std::round((maxLaserAngle + dhalfAngle) / dat.angle_increment);          // again i don't know the directions of the max and min angles 
+                // rightBoundIdx = std::round((maxLaserAngle - dhalfAngle) / dat.angle_increment);         // see above comment ^ need to think about whether to round up or down depending
                 
     
-                leftBoundDist = dat.ranges[leftBoundIdx];                   // corresponding distances to bound indices
-                rightBoundDist = dat.ranges[rightBoundIdx];
+                // leftBoundDist = dat.ranges[leftBoundIdx];                   // corresponding distances to bound indices
+                // rightBoundDist = dat.ranges[rightBoundIdx];
 
-                float thresholdUpper = maxLaserDist * 1.1;
-                float thresholdLower = maxLaserDist * .9;
+                // float thresholdUpper = maxLaserDist * 1.1;
+                // float thresholdLower = maxLaserDist * .9;
 
-                for (uint32_t laser_idx = leftBoundIdx; laser_idx < rightBoundIdx; ++laser_idx){
-                    if (dat.ranges[laser_idx] > thresholdUpper || dat.ranges[laser_idx] < thresholdLower){
-                        passageblocked = true;
-                    }
-                }
+                // for (uint32_t laser_idx = leftBoundIdx; laser_idx < rightBoundIdx; ++laser_idx){
+                //     if (dat.ranges[laser_idx] > thresholdUpper || dat.ranges[laser_idx] < thresholdLower){
+                //         passageblocked = true;
+                //     }
+                // }
             }
         }
 }
 
 void scanningBehaviour(){
-
-
     bool taskComplete;
     int step = getStep();
 
     if(step == 0){
         processLaserData();
+        ROS_INFO("max angle: %0.2f  | max dist: %0.2f", maxLaserAngle, maxLaserDist);
         takeStep();
     }
-    if(step == 1){
+    else if(step == 1){
         savePos();
         takeStep();
     }
-    else if(step ==  1){
+    else if(step ==  2){
         if (maxLaserAngle < 0){
             taskComplete = moveAngle(maxLaserAngle, SLOW_ANGULAR, CW);
         }
@@ -89,19 +88,19 @@ void scanningBehaviour(){
             takeStep();
         }
     }
-    else if(step == 2){
+    else if(step == 3){
         savePos();
         takeStep();
     }
-    else if(step == 3){
-        taskComplete = moveDistance(maxLaserDist, SLOW_LINEAR, BACKWARD);
+    else if(step == 4){
+        taskComplete = moveDistance(maxLaserDist, SLOW_LINEAR, FORWARD);
         
         if(taskComplete){
             takeStep();
         }
     }
-
-
-        
+    else{
+        resetState();
+    }
 
 }
