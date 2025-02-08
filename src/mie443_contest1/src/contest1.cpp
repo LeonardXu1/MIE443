@@ -12,27 +12,31 @@
 #include "../include/stuck.h"
 // intiates a velocity structure
 velS velocity;
-
+stuckDetect stuckDetector;
 // calls the behaviour function related to the state
 void runBehaviour(state curState){
     if(curState == BUMPER_STATE){
         bumperBehaviour();
     }
-    // else if(curState==STUCK_STATE){
-    //     stuckDetector.stuckBehaviour();
-    // }
+    else if(curState==STUCK_STATE){
+        stuckDetector.stuckBehaviour();
+    }
     else if(curState == EXPLORE_STATE){
         scanningBehaviour();
     }
 }
-stuckDetect stuckDetector;//can delete later once we delete the class
+//can delete later once we delete the class
 // Logic for changing states
 void decisionMaker(double timeElapsed){
+    state currentState=getState();
     if(isBumperPressed() == true) { // checks if any bumpers are pressed
         setState(BUMPER_STATE);
     }
-    else if(stuckDetector.checkIfStuck(getAbsPos(), timeElapsed)==true){
+    else if(currentState!=STUCK_STATE&&stuckDetector.checkIfStuck(getAbsPos(), timeElapsed)==true){
         setState(STUCK_STATE);
+    }
+    else if(currentState==STUCK_STATE){
+        return;
     }
     else { // default state
         setState(EXPLORE_STATE);

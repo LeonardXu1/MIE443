@@ -23,7 +23,7 @@ const int CCW = 1;
 
 // Robot Set Speeds
 const float SLOW_LINEAR = 0.1;
-const float FAST_LINEAR = 0.15; // must not exceed 0.25m/s
+const float FAST_LINEAR = 0.25; // must not exceed 0.25m/s
 const float SLOW_ANGULAR = M_PI/6;
 const float FAST_ANGULAR = M_PI/3; // must not exceed PI/3rad/s
 

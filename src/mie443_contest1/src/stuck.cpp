@@ -1,18 +1,10 @@
 #include "../include/stuck.h"
 
-stuckDetect::stuckDetect() : 
-                             isStuck(false),
-                             
-                             startCounting(false)
-{
-    prevTime = ros::Time(0);//initialize timer 
-}
-posS prevPos;
-double notMovingTime;
+
 bool stuckDetect::checkIfStuck(posS currPos, double timeElapsed)
 {
 
-    bool sus=false;
+   
     // ros::Time currentTime = ros::Time::now();
 
     // if (prevTime == ros::Time(0))
@@ -22,35 +14,42 @@ bool stuckDetect::checkIfStuck(posS currPos, double timeElapsed)
     //     prevPos.y=currPos.y;
     //     return false;//timer initialization
     // }
-    
+    isStuck=false;
     double distanceMoved = std::sqrt(std::pow(currPos.x - prevPos.x, 2) + std::pow(currPos.y - prevPos.y, 2));//Calculate disctance moved 
-    if (distanceMoved <= stuckDist)
+    ROS_INFO("moving distance: %lf",distanceMoved);
+   
+    if(std::abs(prevPos.x-currPos.x)<=stuckDist&&std::abs(prevPos.y-currPos.y)<=stuckDist)
     {
-        if (!startCounting)
+        if (startCounting==false)
         {
-            startCounting = true;
+           
             notMovingTime = timeElapsed;//start counting time when robot is moving in a small step 
-            ROS_INFO("start not moving big");
+            ROS_INFO("start not moving big at %lf",notMovingTime);
             sus=true;
-        if(isStuck==false&&sus==true)
+            startCounting=true;
+        }
+        if(isStuck==false&&sus==true&&startCounting==true)
         { 
            
             double timeNoMoving = (timeElapsed - notMovingTime);
+            ROS_INFO("time not moving %lf",timeNoMoving);
             if (timeNoMoving >= stuckTime)//if robot continuously moving small step for 2s(can be tuned), identify it might got stuck 
             {
                 ROS_WARN("robot prob got stuck");
                 isStuck = true;
-                
+                startCounting=false;//stop counting once identified stuck 
+                //return true;
             }
         }
-        }
+        
         
         
     }
     else
         {
-            startCounting = false;
+           startCounting = false;
             isStuck = false;
+            //return false;
             
         }
 
@@ -65,8 +64,7 @@ bool stuckDetect::checkIfStuck(posS currPos, double timeElapsed)
 
     //         }
 
-    prevPos.x = currPos.x;
-    prevPos.y = currPos.y;
+    prevPos=currPos;
     //prevTime = currentTime;
     
    
@@ -110,6 +108,7 @@ void stuckDetect::stuckBehaviour()
             }
             ROS_INFO("%i",randomNum);
             taskComplete = moveAngle(M_PI/2, SLOW_ANGULAR, randomNum);
+            ROS_INFO("Recovered from stuck state");
             takeStep();
             if(taskComplete){
             ROS_INFO("TAKING NEXT STEP");

@@ -15,35 +15,25 @@
 #include "rConfig.h"
 class stuckDetect{
     public:
-    const double stuckTime=5;
-    const double stuckDist=0.05;
-    const double recoverVel=-0.2;
-    const double recoverAngu=M_PI/2;
-
-    stuckDetect();
+    stuckDetect():
+    isStuck(false),
+    notMovingTime(0),
+    startCounting(false){
+        prevPos.x=0;
+        prevPos.y=0;
+    }
     bool checkIfStuck(posS currPos, double timeElapsed);
     void stuckBehaviour();
-    bool ifStuck(){
-        return isStuck;
-    }
-  
-    geometry_msgs::Twist getOdoRespond()const{
-        return odo_response_cmd;
-    }
-
 
     private:
-   
+    const double stuckTime=8;
+    const double stuckDist=0.005;
     bool isStuck;
-  
-    ros::Time prevTime;
-   
-    ros::Time recoveryStart;
-    ros::Time notMoving;
+    posS prevPos;
+    double notMovingTime;
     bool startCounting;
-    geometry_msgs::Twist odo_response_cmd;
- 
-
+    bool sus=false;
+    
 
 };
 #endif

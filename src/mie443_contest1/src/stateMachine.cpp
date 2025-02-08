@@ -36,6 +36,9 @@ void setState(state newState){
         if(newState == BUMPER_STATE){
             curState = BUMPER_STATE;
         }
+        else if(newState==STUCK_STATE){
+            curState=STUCK_STATE;
+        }
         else if(newState == EXPLORE_STATE){
             curState = EXPLORE_STATE;
         }
