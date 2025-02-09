@@ -5,6 +5,8 @@
 LaserData dat;
 float maxLaserDist;
 float maxLaserAngle;
+float finalLaserDist;
+float finalLaserAngle;
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
@@ -32,11 +34,16 @@ void processLaserData()
     maxLaserDist = 0;
     maxLaserAngle = 0.0;
     int maxLaserIdx = -1;               //set to -1 to be a placeholder for "no valid index"
-    bool passageblocked;
-    int leftBoundIdx, rightBoundIdx;
-    float leftBoundDist, rightBoundDist;
     float robotWidth = 10;               //  must change this depending on units and actual width. also currently unsure if rounding will be an error 
     
+    // Variables for obstacle detection and path compensation
+    float obsLaserAngle;
+    float obsLaserDist;
+    int obsLaserIdx;
+    float obsClearance = robotWidth / 2 + 0.05;
+
+
+
     for (uint32_t laser_idx = 0; laser_idx < dat.nLasers; ++ laser_idx)
         {        //cycle through all laser distances and store the max distance and corresponding index, as well as index's angle
             if (dat.ranges[laser_idx] > maxLaserDist){
@@ -44,22 +51,21 @@ void processLaserData()
                 maxLaserIdx = laser_idx;
                 maxLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
 
-                // float dhalfAngle = atan((robotWidth / 2) / maxLaserDist);
-                // leftBoundIdx = std::round((maxLaserAngle + dhalfAngle) / dat.angle_increment);          // again i don't know the directions of the max and min angles 
-                // rightBoundIdx = std::round((maxLaserAngle - dhalfAngle) / dat.angle_increment);         // see above comment ^ need to think about whether to round up or down depending
+                finalLaserAngle = maxLaserAngle;
+
+            }
+            if (dat.ranges[maxLaserIdx] - dat.ranges[maxLaserIdx - 1] > 0.1 ){          // in other words: if the obstacle is on the left of the maxlaserdist 
+                obsLaserIdx = maxLaserIdx - 1;
+                obsLaserDist = dat.ranges[obsLaserIdx];
+                obsLaserAngle = atan(obsClearance / obsLaserDist);
+                finalLaserAngle = maxLaserAngle - obsLaserAngle;                        //this is the case for both positive and negative maxlaserAngle cases. 
+            }
                 
-    
-                // leftBoundDist = dat.ranges[leftBoundIdx];                   // corresponding distances to bound indices
-                // rightBoundDist = dat.ranges[rightBoundIdx];
-
-                // float thresholdUpper = maxLaserDist * 1.1;
-                // float thresholdLower = maxLaserDist * .9;
-
-                // for (uint32_t laser_idx = leftBoundIdx; laser_idx < rightBoundIdx; ++laser_idx){
-                //     if (dat.ranges[laser_idx] > thresholdUpper || dat.ranges[laser_idx] < thresholdLower){
-                //         passageblocked = true;
-                //     }
-                // }
+            if (dat.ranges[maxLaserIdx] - dat.ranges[maxLaserIdx + 1] > 0.1 ){          // in other words: if the obstacle is on the left of the maxlaserdist 
+                obsLaserIdx = maxLaserIdx + 1;
+                obsLaserDist = dat.ranges[obsLaserIdx];
+                obsLaserAngle = atan(obsClearance / obsLaserDist);
+                finalLaserAngle = maxLaserAngle + obsLaserAngle;                        //this is the case for both positive and negative maxlaserAngle cases. 
             }
         }
 }
@@ -79,10 +85,10 @@ void scanningBehaviour(){
     }
     else if(step ==  2){
         if (maxLaserAngle < 0){
-            taskComplete = moveAngle(-maxLaserAngle, SLOW_ANGULAR, CW);
+            taskComplete = moveAngle(-finalLaserAngle, SLOW_ANGULAR, CW);
         }
         else {
-            taskComplete = moveAngle(maxLaserAngle, SLOW_ANGULAR, CCW);
+            taskComplete = moveAngle(finalLaserAngle, SLOW_ANGULAR, CCW);
         }
         if(taskComplete){
             takeStep();
@@ -93,11 +99,11 @@ void scanningBehaviour(){
         takeStep();
     }
     else if(step == 4){
-        taskComplete = moveDistance(maxLaserDist, SLOW_LINEAR, FORWARD);
+        moveLinearSpeed(SLOW_LINEAR, FORWARD);
         
-        if(taskComplete){
-            takeStep();
-        }
+        // if(taskComplete){
+        //     takeStep();
+        // }
     }
     else{
         resetState();
