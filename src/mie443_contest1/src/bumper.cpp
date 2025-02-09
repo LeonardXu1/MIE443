@@ -67,7 +67,7 @@ void bumperBehaviour(){
     else if(step == 3) {
         if(savedBumperPosition()=="LEFT")
         {    ROS_INFO("left bumper got pressed");
-            taskComplete = moveAngle(M_PI/4, SLOW_ANGULAR, CW);
+            taskComplete = moveAngle(50*M_PI/180, SLOW_ANGULAR, CW);
             if(taskComplete){
             takeStep();
         }
@@ -76,7 +76,7 @@ void bumperBehaviour(){
 
         else if(savedBumperPosition()=="RIGHT"){
              ROS_INFO("right bumper got pressed");
-            taskComplete = moveAngle(M_PI/4, SLOW_ANGULAR, CCW);
+            taskComplete = moveAngle(50*M_PI/180, SLOW_ANGULAR, CCW);
                if(taskComplete){
             takeStep();
         }
@@ -97,13 +97,16 @@ void bumperBehaviour(){
                 randomNum=dis(gen);
             }
             }
-            ROS_INFO("%i",randomNum);
-            taskComplete = moveAngle(M_PI/2, SLOW_ANGULAR, randomNum);
+            std::uniform_int_distribution<int> angleDis(95, 160);
+            int randomAngleDegrees = angleDis(gen);
+            double randomAngleRadians = randomAngleDegrees * M_PI / 180.0;
+            
+            ROS_INFO("Random angle: %d degrees, %f radians", randomAngleDegrees, randomAngleRadians);
+            taskComplete = moveAngle(randomAngleRadians, SLOW_ANGULAR, randomNum);
             takeStep();
-            if(taskComplete){
-            ROS_INFO("TAKING NEXT STEP");
-           
-        }
+            if (taskComplete) {
+                ROS_INFO("TAKING NEXT STEP");
+            }
             
         }
      
