@@ -37,6 +37,7 @@ bool stuckDetect::checkIfStuck(posS currPos, double timeElapsed)
             {
                 ROS_WARN("robot prob got stuck");
                 isStuck = true;
+                sus=false;
                 startCounting=false;//stop counting once identified stuck 
                 //return true;
             }
@@ -48,6 +49,7 @@ bool stuckDetect::checkIfStuck(posS currPos, double timeElapsed)
     else
         {
            startCounting = false;
+           sus=false;
             isStuck = false;
             //return false;
             
