@@ -53,6 +53,7 @@ void randomBehaviour() {
         ROS_WARN("RANDOM state aborted after 10 seconds (preempted by higher priority state).");
         setState(EXPLORE_STATE);
         randomInProgress = false;
+        lastRandomTime = currentTime; // that may stop the immediate re-triggering
         return;
     }
 
@@ -73,6 +74,7 @@ void randomBehaviour() {
             ROS_INFO("Forward movement complete. Returning to EXPLORE state.");
             resetState();
             randomInProgress = false;
+            lastRandomTime = currentTime; // that may stop the immediate re-triggering
         }
     }
 }
