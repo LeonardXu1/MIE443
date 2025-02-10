@@ -4,6 +4,7 @@
 posS posAbs;
 posS posSave;
 velS vel;
+float rotationCount;
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg){
     posAbs.x = msg->pose.pose.position.x;
@@ -18,6 +19,7 @@ posS getAbsPos(){
 
 void savePos(){
     posSave = posAbs;
+    rotationCount = 0;
 }
 
 velS getVelocity(){
@@ -31,46 +33,27 @@ float calcDistance(posS pos1, posS pos2){
     return distance;
 }
 
-float calcRotation(posS pos1, posS pos2, int direction){ // rotation calculation is incorrect
+float calcRotation(posS pos1, posS pos2, int direction){
     float yaw1 = pos1.yaw;
     float yaw2 = pos2.yaw;
     float rotation;
 
-    if(yaw1 < 0){
-        yaw1 += M_PI*2;
-    }
-    if(yaw2 < 0){
-        yaw2 += M_PI*2;
-    }
-
     if(direction == CCW){
-        if(yaw1 <= yaw2){
-            rotation = yaw2 - yaw1;
-        }
-        else {
-            rotation = (M_PI*2) - yaw1 + yaw2;
-        }
+        rotation = yaw2 - yaw1;
     }
     else{
-        if(yaw1 >= yaw2){
-            rotation = yaw1 - yaw2;
-        }
-        else{
-            rotation = (M_PI*2) - yaw2 + yaw1;
-        }
+        rotation = yaw1 - yaw2;
+    }
+
+    if(rotation < 0){
+        rotation = rotation + M_PI*2;
+    }
+    
+    if(fabs(rotation - rotationCount) > M_PI){
+        rotation = rotationCount;
     }
 
     return rotation;
-}
-
-bool angleTolerance(posS pos1, posS pos2){
-    float yaw1 = pos1.yaw;
-    float yaw2 = pos2.yaw;
-
-    if(abs(RAD2DEG(yaw1-yaw2)) > 1){
-        return true;
-    }
-    return false;
 }
 
 bool moveDistance(float distance, float speed, int direction) {
@@ -85,14 +68,19 @@ bool moveDistance(float distance, float speed, int direction) {
 }
 
 bool moveAngle(float angle, float speed, int direction){ // does not support rotation >= 360deg
-    float travel = calcRotation(posSave, posAbs, direction);
-    float traveldeg = RAD2DEG(travel);
-    float angledeg = RAD2DEG(angle);
-    float yawSave = RAD2DEG(posSave.yaw);
-    float yawCurr = RAD2DEG(posAbs.yaw);
+    if(angle > M_PI*2) {angle = M_PI*2;}
 
-    ROS_INFO("goal: %f  | traveled: %0.2f  | intial: %f | curr: %f", angledeg, traveldeg, yawSave, yawCurr);
-    if(travel >= angle && angleTolerance(posSave, posAbs)){
+    float travel = calcRotation(posSave, posAbs, direction);
+    rotationCount = travel;
+
+    // float angledeg = RAD2DEG(angle);
+    // float traveldeg = RAD2DEG(travel);
+    // float yawSave = RAD2DEG(posSave.yaw);
+    // float yawCurr = RAD2DEG(posAbs.yaw);
+
+    // ROS_INFO("Direction: %i | goal: %f  | travel: %0.2f | intial: %f | curr: %f", direction, angledeg, traveldeg, yawSave, yawCurr);
+    
+    if(travel >= angle){
         vel.angular = 0.0;
         return true;
     }
