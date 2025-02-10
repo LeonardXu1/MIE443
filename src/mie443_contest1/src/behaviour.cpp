@@ -75,6 +75,7 @@ void randomBehaviour() {
             resetState();
             randomInProgress = false;
             lastRandomTime = currentTime; // Update the lastRandomTime to prevent immediate re-triggering
+            setState(EXPLORE_STATE); // Ensure the state is set to EXPLORE_STATE
         }
     }
 }
