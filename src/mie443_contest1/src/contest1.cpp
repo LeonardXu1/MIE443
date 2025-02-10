@@ -36,9 +36,9 @@ void decisionMaker(){
     if(isBumperPressed() == true) {
         setState(BUMPER_STATE);
     }
-    else if(timeSinceLastRandom >= 10) {  // If 3 minutes (180 seconds) have passed and we're in EXPLORE_STATE, trigger RANDOM_STATE.
+    else if(timeSinceLastRandom >= 10) {  // If 10 seconds have passed and we're in EXPLORE_STATE, trigger RANDOM_STATE.
         setState(RANDOM_STATE);
-        lastRandomTime = currentTime;
+        lastRandomTime = std::chrono::system_clock::now(); // Update lastRandomTime to current time
         ROS_INFO("Switching to RANDOM state after %f seconds.", timeSinceLastRandom);
     }
     else{
