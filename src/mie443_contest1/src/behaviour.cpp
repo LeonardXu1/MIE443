@@ -19,11 +19,11 @@ const float FORWARD_SPEED  = 0.2;       // meters per second
 const float FORWARD_DISTANCE = 0.5;     // 50 centimeters
 
 // Internal static variables for RANDOM state control
-static bool randomInProgress = false;
-static std::chrono::time_point<std::chrono::system_clock> randomStartTime;
-static double randomAngle = 0.0;       // target rotation angle in radians
-static int rotationDirection = 1;      // +1 for CW, -1 for CCW
-static int randomStep = 0;             // 0 = rotation phase, 1 = forward movement
+bool randomInProgress = false;
+std::chrono::time_point<std::chrono::system_clock> randomStartTime;
+double randomAngle = 0.0;       // target rotation angle in radians
+int rotationDirection = 1;      // +1 for CW, -1 for CCW
+int randomStep = 0;             // 0 = rotation phase, 1 = forward movement
 
 void randomBehaviour() {
     auto currentTime = std::chrono::system_clock::now();
@@ -71,7 +71,7 @@ void randomBehaviour() {
         bool forwardDone = moveDistance(FORWARD_DISTANCE, FORWARD_SPEED, FORWARD);
         if (forwardDone) {
             ROS_INFO("Forward movement complete. Returning to EXPLORE state.");
-            setState(EXPLORE_STATE);
+            resetState();
             randomInProgress = false;
         }
     }

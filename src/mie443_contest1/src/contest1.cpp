@@ -11,6 +11,12 @@
 
 // intiates a velocity structure
 velS velocity;
+double timeSinceLastRandom;
+auto currentTime = std::chrono::system_clock::now();
+auto contestStart = std::chrono::system_clock::now();
+auto lastRandomTime = std::chrono::system_clock::now();
+
+
 
 // calls the behaviour function related to the state
 void runBehaviour(state curState){
@@ -30,11 +36,13 @@ void decisionMaker(){
     if(isBumperPressed() == true) {
         setState(BUMPER_STATE);
     }
-    else {
-        // Remain in current state if not preempted (note: RANDOM state will complete its maneuver)
-        if(getState() != RANDOM_STATE) {
-            setState(EXPLORE_STATE);
-        }
+    else if(timeSinceLastRandom >= 10) {  // If 3 minutes (180 seconds) have passed and we're in EXPLORE_STATE, trigger RANDOM_STATE.
+        setState(RANDOM_STATE);
+        lastRandomTime = currentTime;
+        ROS_INFO("Switching to RANDOM state after %f seconds.", timeSinceLastRandom);
+    }
+    else{
+        setState(EXPLORE_STATE);
     }
 }
 
@@ -53,10 +61,10 @@ int main(int argc, char **argv)
     geometry_msgs::Twist vel; //twist class
 
  // Global contest timer:
-    auto contestStart = std::chrono::system_clock::now();
+    contestStart = std::chrono::system_clock::now();
     uint64_t secondsElapsed = 0;
     // Timer for RANDOM state triggering: initialize to contest start.
-    auto lastRandomTime = contestStart;
+    lastRandomTime = contestStart;
 
     while(ros::ok() && secondsElapsed <= 480) {
         ros::spinOnce();
@@ -65,14 +73,8 @@ int main(int argc, char **argv)
         decisionMaker();
 
         // --- RANDOM State Trigger ---
-        auto currentTime = std::chrono::system_clock::now();
-        double timeSinceLastRandom = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastRandomTime).count();
-        // If 3 minutes (180 seconds) have passed and we're in EXPLORE_STATE, trigger RANDOM_STATE.
-        if(timeSinceLastRandom >= 180 && getState() == EXPLORE_STATE) {
-            setState(RANDOM_STATE);
-            lastRandomTime = currentTime;
-            ROS_INFO("Switching to RANDOM state after %f seconds.", timeSinceLastRandom);
-        }
+        currentTime = std::chrono::system_clock::now();
+        timeSinceLastRandom = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastRandomTime).count();
 
         // Run the behaviour for the current state.
         state curState = getState();
@@ -80,7 +82,6 @@ int main(int argc, char **argv)
 
         // Get and publish velocity commands
         velocity = getVelocity();
-        ROS_INFO("State: %s", stateName[getState()].c_str());
         vel.angular.z = velocity.angular;
         vel.linear.x = velocity.linear;
         vel_pub.publish(vel);

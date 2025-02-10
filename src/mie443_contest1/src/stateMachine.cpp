@@ -32,8 +32,12 @@ void takeStep(){
 //checks and changes the state of the robot
 void setState(state newState){
     if(newState != curState && checkPriority(newState, curState)){ // checks if the new state is "new" and the priority of the new state
+        ROS_INFO("State: %s", stateName[getState()].c_str());
         if(newState == BUMPER_STATE){
             curState = BUMPER_STATE;
+        }
+        if(newState == RANDOM_STATE){
+            curState = RANDOM_STATE;
         }
         else if(newState == EXPLORE_STATE){
             curState = EXPLORE_STATE;
