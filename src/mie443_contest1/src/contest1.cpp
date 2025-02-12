@@ -1,15 +1,16 @@
 #include <geometry_msgs/Twist.h>
-#include <nav_msgs/Odometry.h>
-#include <tf/transform_datatypes.h>
 #include <stdio.h>
 #include <cmath>
 #include <chrono>
+#include <cstring>
 
 #include "../include/rConfig.h"
 #include "../include/stateMachine.h"
 #include "../include/bumper.h"
 #include "../include/behaviour.h"
+#include "../include/scanning.h"
 #include "../include/stuck.h"
+#include "../include/rotation.h"
 // intiates a velocity structure
 velS velocity;
 
@@ -17,23 +18,56 @@ velS velocity;
 void runBehaviour(state curState){
     if(curState == BUMPER_STATE){
         bumperBehaviour();
+
     }
-    // else if(curState==STUCK_STATE){
-    //     stuckDetector.stuckBehaviour();
-    // }
+    else if(curState==STUCK_STATE){
+        stuckBehaviour();
+     
+    }
+    else if(curState==ROTATION_STATE){
+        rotateBehaviour();
+        resetRotation();
+    }
     else if(curState == EXPLORE_STATE){
-        exploreBehaviour();
+        scanningBehaviour();
     }
 }
-stuckDetect stuckDetector;//can delete later once we delete the class
+//can delete later once we delete the class
 // Logic for changing states
 void decisionMaker(double timeElapsed){
+    state currentState=getState();
+    posS currPos=getAbsPos();
     if(isBumperPressed() == true) { // checks if any bumpers are pressed
         setState(BUMPER_STATE);
     }
-    else if(stuckDetector.checkIfStuck(getAbsPos(), timeElapsed)==true){
+    else if(currentState!=STUCK_STATE&&checkIfStuck(getAbsPos(), timeElapsed)==true){
         setState(STUCK_STATE);
+        
     }
+    // else if(isBumperBehaviourComplete()==true||isStuckBehaviourComplete()==true){
+   else if(currentState==BUMPER_STATE||currentState==STUCK_STATE){  
+
+
+     if(shouldRotate(getAbsPos())==true&&(isBumperBehaviourComplete()==true||isStuckBehaviourComplete()==true)){
+            resetState();
+           setState(ROTATION_STATE); 
+        
+        }
+    else if (isBumperBehaviourComplete()==true||isStuckBehaviourComplete()==true){
+     
+        resetState();
+        resetBumperCompletion();
+        resetStuckCompletion();
+    }
+   }
+  
+    else if(currentState==STUCK_STATE){
+        return; 
+    }
+    else if(currentState==ROTATION_STATE){ // default state
+       
+       return;
+     }
     else { // default state
         setState(EXPLORE_STATE);
     }
@@ -45,7 +79,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
 
     ros::Subscriber bumper_sub = nh.subscribe("mobile_base/events/bumper", 10, &bumperCallback); //declaration of subscribers from bumper
-    // ros::Subscriber laser_sub = nh.subscribe("scan", 10, &laserCallback);//from sensor
+    ros::Subscriber laser_sub = nh.subscribe("scan", 10, &laserCallback);//from sensor
 
     ros::Publisher vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/teleop", 1); //advertise wheel speed
     ros::Subscriber odom = nh.subscribe("odom", 1, &odomCallback);
@@ -58,9 +92,6 @@ int main(int argc, char **argv)
     start = std::chrono::system_clock::now();
     uint64_t secondsElapsed = 0;
 
-    float angular = 0.0;
-    float linear = 0.0;
-
     while(ros::ok() && secondsElapsed <= 480) {
         ros::spinOnce();
 
@@ -69,7 +100,7 @@ int main(int argc, char **argv)
 
         // runs the behaviour related to the state
         state curState = getState();
-         ROS_INFO("State: %s", stateName[getState()].c_str());
+        ROS_INFO("State: %s", stateName[getState()].c_str());
         runBehaviour(curState);
 
         velocity = getVelocity();

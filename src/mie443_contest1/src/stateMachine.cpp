@@ -1,6 +1,7 @@
 #include "../include/stateMachine.h"
 
-state currState; // current state of robot
+state curState = CYCLE_STATE; // current state of robot
+int step = 0;
 
 // returns true if state1 has a higher priority than state2
 bool checkPriority(state state1, state state2){
@@ -12,30 +13,41 @@ bool checkPriority(state state1, state state2){
 
 // returns the current state
 state getState(){
-    return currState;
+    return curState;
 }
 
-void bumperState(){
-    ROS_INFO("Bumper State");
+void resetState(){
+    curState = CYCLE_STATE;
+    step = 0;
 }
 
-void exploreState(){
-    ROS_INFO("Explore State");
+int getStep(){
+    return step;
+}
+
+void takeStep(){
+    step++;
+    ROS_INFO("Step: %i", step);
 }
 
 //checks and changes the state of the robot
 void setState(state newState){
-    if(newState != currState && checkPriority(newState, currState)){ // checks if the new state is "new" and the priority of the new state
+    if(newState != curState && checkPriority(newState, curState)){ // checks if the new state is "new" and the priority of the new state
+      
+
         if(newState == BUMPER_STATE){
-            currState = BUMPER_STATE;
-            bumperState();
+            curState = BUMPER_STATE;
         }
-        if(newState == EXPLORE_STATE){
-            currState = EXPLORE_STATE;
-            exploreState();
+        else if(newState==STUCK_STATE){
+            curState=STUCK_STATE;
         }
+        else if(newState==ROTATION_STATE){
+            curState=ROTATION_STATE;
+        }
+        else if(newState == EXPLORE_STATE){
+            curState = EXPLORE_STATE;
+        }
+        step = 0;
     }
 }
-
-
 
