@@ -10,16 +10,23 @@
 #include "../include/behaviour.h"
 #include "../include/scanning.h"
 #include "../include/stuck.h"
+#include "../include/rotation.h"
 // intiates a velocity structure
 velS velocity;
-stuckDetect stuckDetector;
+
 // calls the behaviour function related to the state
 void runBehaviour(state curState){
     if(curState == BUMPER_STATE){
         bumperBehaviour();
+
     }
     else if(curState==STUCK_STATE){
-        stuckDetector.stuckBehaviour();
+        stuckBehaviour();
+     
+    }
+    else if(curState==ROTATION_STATE){
+        rotateBehaviour();
+        resetRotation();
     }
     else if(curState == EXPLORE_STATE){
         scanningBehaviour();
@@ -29,15 +36,38 @@ void runBehaviour(state curState){
 // Logic for changing states
 void decisionMaker(double timeElapsed){
     state currentState=getState();
+    posS currPos=getAbsPos();
     if(isBumperPressed() == true) { // checks if any bumpers are pressed
         setState(BUMPER_STATE);
     }
-    else if(currentState!=STUCK_STATE&&stuckDetector.checkIfStuck(getAbsPos(), timeElapsed)==true){
+    else if(currentState!=STUCK_STATE&&checkIfStuck(getAbsPos(), timeElapsed)==true){
         setState(STUCK_STATE);
+        
     }
+    // else if(isBumperBehaviourComplete()==true||isStuckBehaviourComplete()==true){
+   else if(currentState==BUMPER_STATE||currentState==STUCK_STATE){  
+
+
+     if(shouldRotate(getAbsPos())==true&&(isBumperBehaviourComplete()==true||isStuckBehaviourComplete()==true)){
+            resetState();
+           setState(ROTATION_STATE); 
+        
+        }
+    else if (isBumperBehaviourComplete()==true||isStuckBehaviourComplete()==true){
+     
+        resetState();
+        resetBumperCompletion();
+        resetStuckCompletion();
+    }
+   }
+  
     else if(currentState==STUCK_STATE){
-        return;
+        return; 
     }
+    else if(currentState==ROTATION_STATE){ // default state
+       
+       return;
+     }
     else { // default state
         setState(EXPLORE_STATE);
     }

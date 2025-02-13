@@ -33,11 +33,16 @@ void takeStep(){
 //checks and changes the state of the robot
 void setState(state newState){
     if(newState != curState && checkPriority(newState, curState)){ // checks if the new state is "new" and the priority of the new state
+      
+
         if(newState == BUMPER_STATE){
             curState = BUMPER_STATE;
         }
         else if(newState==STUCK_STATE){
             curState=STUCK_STATE;
+        }
+        else if(newState==ROTATION_STATE){
+            curState=ROTATION_STATE;
         }
         else if(newState == EXPLORE_STATE){
             curState = EXPLORE_STATE;

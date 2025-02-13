@@ -1,4 +1,5 @@
 
+
 #ifndef ROBOT_CONFIG
 #define ROBOT_CONFIG
 
@@ -13,8 +14,8 @@
 const uint8_t N_BUMPER = 3;
 
 // defines the possible robot states and priority
-enum state {STUCK_STATE=0,BUMPER_STATE = 1, EXPLORE_STATE = 2, CYCLE_STATE = 3};
-const std::string stateName[] = {"STUCK_STATE","BUMPER_STATE", "EXPLORE_STATE", "CYCLE_STATE"};
+enum state {BUMPER_STATE = 0, STUCK_STATE=1,ROTATION_STATE=2,EXPLORE_STATE = 3, CYCLE_STATE = 4};
+const std::string stateName[] = {"BUMPER_STATE", "STUCK_STATE","ROTATION_STATE","EXPLORE_STATE", "CYCLE_STATE"};
 
 const int FORWARD = 1;
 const int BACKWARD = -1;
@@ -45,5 +46,6 @@ struct posS {
 typedef struct posS posS;
 
 #endif
+
 
 

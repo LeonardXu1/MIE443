@@ -2,7 +2,7 @@
 #define STATE_MACHINE
 
 #include "rConfig.h"
-
+#include "movement.h"
 state getState(); // gets the current state
 
 void bumperState();
