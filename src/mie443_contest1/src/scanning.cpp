@@ -229,10 +229,10 @@ void turn_direction()
     int center_idx = dat.ranges.size() / 2;
     
     if (minLaserIdx < center_idx){
-        finalLaserAngle = M_PI / 2;
+        finalLaserAngle = M_PI / 6;
     }
     else{
-        finalLaserAngle = -M_PI /2.5;
+        finalLaserAngle = -M_PI /6;
     }
 }
 
@@ -257,7 +257,7 @@ void pickBestPath ()
 //    bool noClearPath = leftPathClearance  < robotWidth && rightPathClearance < robotWidth;
 
     //Case: No edges detected     
-    if (!right_edge_found && !left_edge_found){
+    if (i_edgeIndicies.size() == 0){
         turn_direction();
         // finalLaserAngle = getRandomAngle(M_PI / 2, 3 * M_PI / 2);                //***FOR NOW IT'S GET RANDOM ANGLE UNLESS WE DO THE CHECK LEFT CHECK RIGHT
         // ROS_INFO("NO Edges --> RANDOM");
@@ -431,7 +431,7 @@ void scanningBehaviour(){
             takeStep();
         }
     }
-    else if(!right_edge_found && !left_edge_found){
+    else if(i_edgeIndicies.size() == 0){
         overrideStep(1);
     }
     else if(step == 4){
