@@ -30,6 +30,10 @@ void takeStep(){
     ROS_INFO("Step: %i", step);
 }
 
+void overrideStep(int newStep){
+    step = newStep;
+}
+
 //checks and changes the state of the robot
 void setState(state newState){
     if(newState != curState && checkPriority(newState, curState)){ // checks if the new state is "new" and the priority of the new state

@@ -69,7 +69,7 @@ float rightCircleAngle;
 float rightPathClearance;
 bool right_edge_found = false;           //track if an edge was found
 
-float edgeThresh = 0.1;
+float edgeThresh = 0.18;
 
 
 void rightEdgeFinder()
@@ -207,6 +207,34 @@ void findAllEdges()
 }
 
 
+float minLaserDist;
+float minLaserAngle;
+int minLaserIdx;
+//Replacing random angles
+void turn_direction()
+{
+    // Assigning variable placeholder values 
+    minLaserDist = 10000;
+    // minLaserAngle = 0.0;
+    minLaserIdx = -1;               //set to -1 to be a placeholder for "no valid index"
+    
+    for (uint32_t laser_idx = 0; laser_idx < dat.nLasers; ++ laser_idx){        //cycle through all laser distances and store the min distance and corresponding index, as well as index's angle
+        if (dat.ranges[laser_idx] < minLaserDist){
+            minLaserDist = dat.ranges[laser_idx];
+            minLaserIdx = laser_idx;
+            // minLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
+        }
+    }
+
+    int center_idx = dat.ranges.size() / 2;
+    
+    if (minLaserIdx < center_idx){
+        finalLaserAngle = M_PI / 2;
+    }
+    else{
+        finalLaserAngle = -M_PI /2.5;
+    }
+}
 
 
 
@@ -230,8 +258,10 @@ void pickBestPath ()
 
     //Case: No edges detected     
     if (!right_edge_found && !left_edge_found){
-        finalLaserAngle = getRandomAngle(M_PI / 2, 3 * M_PI / 2);                //***FOR NOW IT'S GET RANDOM ANGLE UNLESS WE DO THE CHECK LEFT CHECK RIGHT
-        ROS_INFO("NO Edges --> RANDOM");
+        turn_direction();
+        // finalLaserAngle = getRandomAngle(M_PI / 2, 3 * M_PI / 2);                //***FOR NOW IT'S GET RANDOM ANGLE UNLESS WE DO THE CHECK LEFT CHECK RIGHT
+        // ROS_INFO("NO Edges --> RANDOM");
+        return;
 
     }
 
@@ -391,8 +421,8 @@ void scanningBehaviour(){
         takeStep();
     }
     else if(step ==  3){
-        if (maxLaserAngle < 0){
-            taskComplete = moveAngle(-finalLaserAngle, SLOW_ANGULAR, CW);
+        if (finalLaserAngle < 0){
+            taskComplete = moveAngle(-finalLaserAngle, SLOW_ANGULAR, CW);  // added a negative here because then negative angles become positive
         }
         else {
             taskComplete = moveAngle(finalLaserAngle, SLOW_ANGULAR, CCW);
@@ -400,6 +430,9 @@ void scanningBehaviour(){
         if(taskComplete){
             takeStep();
         }
+    }
+    else if(!right_edge_found && !left_edge_found){
+        overrideStep(1);
     }
     else if(step == 4){
         savePos();

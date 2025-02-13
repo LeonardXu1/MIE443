@@ -13,6 +13,8 @@ int getStep();
 
 void takeStep();
 
+void overrideStep(int newStep);
+
 void setState(state newState); // Checks if new state should be set and sets it
 
 #endif
