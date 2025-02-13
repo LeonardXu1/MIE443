@@ -11,75 +11,47 @@
 #include "../include/scanning.h"
 #include "../include/stuck.h"
 #include "../include/rotation.h"
+
 // intiates a velocity structure
 velS velocity;
 
 // calls the behaviour function related to the state
-void runBehaviour(state curState)
+void runBehaviour(string curState)
 {
-    if (curState == BUMPER_STATE)
+    if (curState == "BUMPER_STATE")
     {
         bumperBehaviour();
     }
-    else if (curState == STUCK_STATE)
+    else if (curState == "STUCK_STATE")
     {
         stuckBehaviour();
     }
-    else if (curState == ROTATION_STATE)
+    else if (curState == "ROTATION_STATE")
     {
         rotateBehaviour();
-        resetRotation();
     }
-    else if (curState == EXPLORE_STATE)
+    else if (curState == "EXPLORE_STATE")
     {
         scanningBehaviour();
     }
 }
-// can delete later once we delete the class
+
+
 //  Logic for changing states
 void decisionMaker(double timeElapsed)
 {
-    state currentState = getState();
-    posS currPos = getAbsPos();
-    if (isBumperPressed() == true)
-    { // checks if any bumpers are pressed
-        setState(BUMPER_STATE);
+    string currentState = getState();
+    if (isBumperPressed() == true){ // checks if any bumpers are pressed
+        setState("BUMPER_STATE");
     }
-    else if (currentState != STUCK_STATE && checkIfStuck(getAbsPos(), timeElapsed) == true)
-    {
-        setState(STUCK_STATE);
-    }
-    // else if(isBumperBehaviourComplete()==true||isStuckBehaviourComplete()==true){
-    else if (currentState == BUMPER_STATE || currentState == STUCK_STATE)
-    {
-
-        if (shouldRotate(getAbsPos()) == true && (isBumperBehaviourComplete() == true || isStuckBehaviourComplete() == true))
-        {
-            resetState();
-            setState(ROTATION_STATE);
-        }
-        else if (isBumperBehaviourComplete() == true || isStuckBehaviourComplete() == true)
-        {
-
-            resetState();
-            resetBumperCompletion();
-            resetStuckCompletion();
-        }
+    // else if (currentState != STUCK_STATE && checkIfStuck(getAbsPos(), timeElapsed) == true){
+    //     setState("STUCK_STATE");
+    // }
+    if (isNewSpace() == true){ 
+        setState("ROTATION_STATE");
     }
 
-    else if (currentState == STUCK_STATE)
-    {
-        return;
-    }
-    else if (currentState == ROTATION_STATE)
-    { // default state
-
-        return;
-    }
-    else
-    { // default state
-        setState(EXPLORE_STATE);
-    }
+    setState("EXPLORE_STATE");
 }
 
 int main(int argc, char **argv)
@@ -109,8 +81,7 @@ int main(int argc, char **argv)
         decisionMaker(secondsElapsed);
 
         // runs the behaviour related to the state
-        state curState = getState();
-        ROS_INFO("State: %s", stateName[getState()].c_str());
+        string curState = getState();
         runBehaviour(curState);
 
         velocity = getVelocity();

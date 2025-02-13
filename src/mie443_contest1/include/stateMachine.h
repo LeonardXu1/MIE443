@@ -3,7 +3,9 @@
 
 #include "rConfig.h"
 #include "movement.h"
-state getState(); // gets the current state
+#include <map>
+
+string getState(); // gets the current state
 
 void bumperState();
 
@@ -16,5 +18,6 @@ void takeStep();
 void overrideStep(int newStep);
 
 void setState(state newState); // Checks if new state should be set and sets it
+void setState(string newState); // Checks if new state should be set and sets it
 
 #endif

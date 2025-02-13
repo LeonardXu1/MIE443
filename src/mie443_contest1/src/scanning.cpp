@@ -57,7 +57,7 @@ void maxLaserData()
             maxLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
         }
     }
-    ROS_INFO("max distance %0.2f    | max laser angle %0.2f   | max laser index %0.2f", maxLaserDist, maxLaserAngle, maxLaserIdx);
+    // ROS_INFO("max distance %0.2f    | max laser angle %0.2f   | max laser index %0.2f", maxLaserDist, maxLaserAngle, maxLaserIdx);
 }
     
 // ****STEP 2: Find Next Edge to the RIGHT [of maxLaser]
@@ -95,16 +95,16 @@ void rightEdgeFinder()
         currentIdx = prevIdx;
         prevIdx = currentIdx - 1;
     }
-    ROS_INFO("right last current idx %d", currentIdx);
-    ROS_INFO("right last prev idx %d", prevIdx);
-    ROS_INFO("right edge found: %s", right_edge_found ? "true" : "false");
+    // ROS_INFO("right last current idx %d", currentIdx);
+    // ROS_INFO("right last prev idx %d", prevIdx);
+    // ROS_INFO("right edge found: %s", right_edge_found ? "true" : "false");
 
     //angle between max and right edge
     rightCircleAngle = maxLaserAngle - robsLaserAngle;
     rightPathClearance = 2 * robsLaserDist * sin(rightCircleAngle / 2);
         
-    ROS_INFO("right edge dis %0.2f    | right edge angle %0.2f   | right edge index %0.2d", robsLaserDist, robsLaserAngle, robsLaserIdx);
-    ROS_INFO("angle b/w right edge and max %0.2f    | right edge chord %0.2f", rightCircleAngle, rightPathClearance);
+    // ROS_INFO("right edge dis %0.2f    | right edge angle %0.2f   | right edge index %0.2d", robsLaserDist, robsLaserAngle, robsLaserIdx);
+    // ROS_INFO("angle b/w right edge and max %0.2f    | right edge chord %0.2f", rightCircleAngle, rightPathClearance);
 
 
 }
@@ -137,7 +137,7 @@ void leftEdgeFinder()
             lobsLaserAngle = dat.angle_min + lobsLaserIdx * dat.angle_increment;
 
             left_edge_found = true;
-            ROS_INFO("test difference %0.2f |   current idx distance %0.2f  |   next idx dist %0.2f ",dat.ranges[currentIdx] - dat.ranges[nextIdx], dat.ranges [currentIdx], dat.ranges[nextIdx] );
+            // ROS_INFO("test difference %0.2f |   current idx distance %0.2f  |   next idx dist %0.2f ",dat.ranges[currentIdx] - dat.ranges[nextIdx], dat.ranges [currentIdx], dat.ranges[nextIdx] );
             
             break;
 
@@ -146,9 +146,9 @@ void leftEdgeFinder()
         currentIdx = nextIdx;
         nextIdx = currentIdx + 1;
     }
-    ROS_INFO("left last current idx %d", currentIdx);
-    ROS_INFO("left last next idx %d", nextIdx);
-    ROS_INFO("left edge found: %s", left_edge_found ? "true" : "false");
+    // ROS_INFO("left last current idx %d", currentIdx);
+    // ROS_INFO("left last next idx %d", nextIdx);
+    // ROS_INFO("left edge found: %s", left_edge_found ? "true" : "false");
 
 
 
@@ -156,8 +156,8 @@ void leftEdgeFinder()
     leftCircleAngle = lobsLaserAngle - maxLaserAngle;
     leftPathClearance = 2 * lobsLaserDist * sin(leftCircleAngle / 2);
 
-    ROS_INFO("left edge dis %0.3f    | left edge angle %0.2f   | left edge index %0.2d", lobsLaserDist, lobsLaserAngle, lobsLaserIdx);
-    ROS_INFO("angle b/w left edge and max %0.2f    | left edge chord %0.2f", leftCircleAngle, leftPathClearance);
+    // ROS_INFO("left edge dis %0.3f    | left edge angle %0.2f   | left edge index %0.2d", lobsLaserDist, lobsLaserAngle, lobsLaserIdx);
+    // ROS_INFO("angle b/w left edge and max %0.2f    | left edge chord %0.2f", leftCircleAngle, leftPathClearance);
 }
 
 
@@ -167,7 +167,8 @@ std::vector<int> j_edgeIndicies;
 
 //// SEE IF THIS WORKS
 void findAllEdges()
-{   ROS_INFO("test 0");
+{
+    // ROS_INFO("test 0");
     int i = 0;
     int j = i + 1;
     i_edgeIndicies.clear();
@@ -202,8 +203,8 @@ void findAllEdges()
         ss << i_edgeIndicies[k] << " ";
         aa << j_edgeIndicies[k] << " ";
     }
-    ROS_INFO("Closer edge indices: %s", ss.str().c_str());
-    ROS_INFO("Further edge indices: %s", aa.str().c_str());
+    // ROS_INFO("Closer edge indices: %s", ss.str().c_str());
+    // ROS_INFO("Further edge indices: %s", aa.str().c_str());
 }
 
 
@@ -346,7 +347,7 @@ void pickBestPath ()
             avEdgeChord = 2 * std::min(lobsLaserDist, robsLaserDist) * sin(avEdgeAngle / 2);
             if (avEdgeChord > robotWidth){
                 finalLaserAngle = (lobsLaserAngle + robsLaserAngle) / 2;
-                ROS_INFO("SQUEEZE THROUGH");
+                // ROS_INFO("SQUEEZE THROUGH");
             }
             
             else{
@@ -376,10 +377,10 @@ void pickBestPath ()
 
             //if no better option tha
             finalLaserAngle = getRandomAngle(M_PI /2, 3*M_PI/2);
-            ROS_INFO("NO CLEAR --> RANDOM");
+            // ROS_INFO("NO CLEAR --> RANDOM");
             
         }
-        ROS_INFO("edge chord %0.2f  |   av edge angle %0.2f", avEdgeChord, avEdgeAngle);
+        // ROS_INFO("edge chord %0.2f  |   av edge angle %0.2f", avEdgeChord, avEdgeAngle);
     }  
 
 }
@@ -405,15 +406,15 @@ void scanningBehaviour(){
         pickBestPath();
  
 
-        ROS_INFO("ZERO edge case: %s", !right_edge_found && !left_edge_found ? "true" : "false");
-        ROS_INFO("ONE edge case: %s", right_edge_found ^ left_edge_found ? "true" : "false");
-        ROS_INFO("TWO edge case: %s", right_edge_found && left_edge_found ? "true" : "false");
+        // ROS_INFO("ZERO edge case: %s", !right_edge_found && !left_edge_found ? "true" : "false");
+        // ROS_INFO("ONE edge case: %s", right_edge_found ^ left_edge_found ? "true" : "false");
+        // ROS_INFO("TWO edge case: %s", right_edge_found && left_edge_found ? "true" : "false");
 
-        ROS_INFO("rightPass: %s", rightPathClear ? "true" : "false");
-        ROS_INFO("leftPass: %s", leftPathClear ? "true" : "false");
-        ROS_INFO("bothPass: %s", maxPathClear ? "true" : "false");
-        ROS_INFO("neitherPass: %s", noClearPath ? "true" : "false");
-        ROS_INFO("final angle: %0.2f", finalLaserAngle);
+        // ROS_INFO("rightPass: %s", rightPathClear ? "true" : "false");
+        // ROS_INFO("leftPass: %s", leftPathClear ? "true" : "false");
+        // ROS_INFO("bothPass: %s", maxPathClear ? "true" : "false");
+        // ROS_INFO("neitherPass: %s", noClearPath ? "true" : "false");
+        // ROS_INFO("final angle: %0.2f", finalLaserAngle);
         takeStep();
     }
     else if(step == 2){

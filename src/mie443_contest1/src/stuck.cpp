@@ -27,9 +27,8 @@ bool checkIfStuck(posS currPos, double timeElapsed)
     {
         if (startCounting == false)
         {
-
             notMovingTime = timeElapsed; // start counting time when robot is moving in a small step
-            ROS_INFO("start not moving big at %lf", notMovingTime);
+            // ROS_INFO("start not moving big at %lf", notMovingTime);
             sus = true;
             startCounting = true;
         }
@@ -37,10 +36,10 @@ bool checkIfStuck(posS currPos, double timeElapsed)
         {
 
             double timeNoMoving = (timeElapsed - notMovingTime);
-            ROS_INFO("time not moving %lf", timeNoMoving);
+            // ROS_INFO("time not moving %lf", timeNoMoving);
             if (timeNoMoving >= stuckTime) // if robot continuously moving small step for 2s(can be tuned), identify it might got stuck
             {
-                ROS_WARN("robot prob got stuck");
+                // ROS_WARN("robot prob got stuck");
                 isStuck = true;
                 sus = false;
                 startCounting = false; // stop counting once identified stuck
@@ -117,23 +116,17 @@ void stuckBehaviour()
                     randomNum = dis(gen);
                 }
             }
-            ROS_INFO("%i", randomNum);
+            // ROS_INFO("%i", randomNum);
         }
         taskComplete = moveAngle(M_PI / 2, SLOW_ANGULAR, randomNum);
         randomComplete = true;
 
         if (taskComplete)
         {
-            if (shouldRotate(getAbsPos()))
-            {
-                resetState();
-                setState(ROTATION_STATE);
-            }
-            ROS_INFO("Recovered from stuck state,TAKING NEXT STEP");
+            // ROS_INFO("Recovered from stuck state,TAKING NEXT STEP");
             takeStep();
             randomComplete = false;
             stuckBehaviourComplete = true;
-            saveStatePos(getAbsPos());
         }
     }
     else

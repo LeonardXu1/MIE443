@@ -82,7 +82,7 @@ void bumperBehaviour()
 
         if (savedBumperPosition() == "LEFT")
         {
-            ROS_INFO("left bumper got pressed");
+            // ROS_INFO("left bumper got pressed");
 
             taskComplete = moveAngle(50 * M_PI / 180, SLOW_ANGULAR, CW);
 
@@ -95,7 +95,7 @@ void bumperBehaviour()
 
         else if (savedBumperPosition() == "RIGHT")
         {
-            ROS_INFO("right bumper got pressed");
+            // ROS_INFO("right bumper got pressed");
 
             taskComplete = moveAngle(50 * M_PI / 180, SLOW_ANGULAR, CCW);
 
@@ -107,7 +107,7 @@ void bumperBehaviour()
         }
         else if (savedBumperPosition() == "CENTER")
         {
-            ROS_INFO("center bumper got pressed");
+            // ROS_INFO("center bumper got pressed");
 
             if (bumperRandomComplete == false)
             {
@@ -131,31 +131,22 @@ void bumperBehaviour()
                 randomAngleDegrees = angleDis(gen);
                 randomAngleRadians = randomAngleDegrees * M_PI / 180.0;
             }
-            ROS_INFO("Random angle: %d degrees, %f radians", randomAngleDegrees, randomAngleRadians);
-            ROS_INFO("Random direction %i", bumperRandomNum);
+            // ROS_INFO("Random angle: %d degrees, %f radians", randomAngleDegrees, randomAngleRadians);
+            // ROS_INFO("Random direction %i", bumperRandomNum);
             bumperRandomComplete = true;
             taskComplete = moveAngle(randomAngleRadians, SLOW_ANGULAR, bumperRandomNum);
 
             if (taskComplete)
             {
-                if (shouldRotate(getAbsPos()))
-                {
-                    resetState();
-                    setState(ROTATION_STATE);
-                }
-
                 takeStep();
                 bumperRandomComplete = false;
                 bumperBehaviourComplete = true;
-                saveStatePos(getAbsPos());
             }
         }
     }
-    // else {
-    // //     ROS_INFO("RESET STATE");
-    //      //   resetState();
-
-    // }
+    else {
+        resetState();
+    }
 }
 void resetBumperCompletion()
 {

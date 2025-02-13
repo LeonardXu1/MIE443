@@ -16,6 +16,8 @@ void savePos();
 
 velS getVelocity();
 
+float calcDistance(posS pos1, posS pos2);
+
 bool moveDistance(float distance, float speed, int direction);
 
 bool moveAngle(float angle, float speed, int direction);
