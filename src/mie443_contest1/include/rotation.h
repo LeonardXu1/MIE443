@@ -9,12 +9,9 @@
 #include "bumper.h"
 #include "stuck.h"
 bool isRotationComplete();
-
 void resetRotation();
-
 void rotateBehaviour();
 void saveStatePos(posS pos);
-
 bool shouldRotate(posS currentStatePos);
 
 #endif

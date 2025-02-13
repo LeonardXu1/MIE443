@@ -1,6 +1,6 @@
 #include "../include/stuck.h"
 
-const double stuckTime = 25;
+const double stuckTime = 28;
 const double stuckDist = 0.005;
 bool isStuck = false;
 posS prevPos;
@@ -121,20 +121,19 @@ void stuckBehaviour()
         }
         taskComplete = moveAngle(M_PI / 2, SLOW_ANGULAR, randomNum);
         randomComplete = true;
-        
-                 
+
         if (taskComplete)
         {
-                if(shouldRotate(getAbsPos())){
-                    resetState();
-                    setState(ROTATION_STATE);
-                 }
+            if (shouldRotate(getAbsPos()))
+            {
+                resetState();
+                setState(ROTATION_STATE);
+            }
             ROS_INFO("Recovered from stuck state,TAKING NEXT STEP");
             takeStep();
             randomComplete = false;
             stuckBehaviourComplete = true;
             saveStatePos(getAbsPos());
-          
         }
     }
     else
