@@ -231,6 +231,8 @@ void pickBestPath ()
     //Case: No edges detected     
     if (!right_edge_found && !left_edge_found){
         finalLaserAngle = getRandomAngle(M_PI / 2, 3 * M_PI / 2);                //***FOR NOW IT'S GET RANDOM ANGLE UNLESS WE DO THE CHECK LEFT CHECK RIGHT
+        ROS_INFO("NO Edges --> RANDOM");
+
     }
 
     //Case: only 1 edge detected 
@@ -369,6 +371,7 @@ void scanningBehaviour(){
         maxLaserData();
         leftEdgeFinder();
         rightEdgeFinder();
+        findAllEdges();
         pickBestPath();
  
 
