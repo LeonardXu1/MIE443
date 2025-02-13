@@ -75,7 +75,7 @@ void minLaserData()
         if (dat.ranges[laser_idx] < minLaserDist){
             minLaserDist = dat.ranges[laser_idx];
             minLaserIdx = laser_idx;
-            // minLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
+            minLaserAngle = dat.angle_min + minLaserIdx * dat.angle_increment;
         }
     }
     // ROS_INFO("min distance %0.2f    | min laser angle %0.2f   | min laser index %0.2f", minLaserDist, minLaserAngle, minLaserIdx);
@@ -398,8 +398,17 @@ void pickBestPath ()
 
 
             //if no better option tha
-            finalLaserAngle = getRandomAngle(M_PI /2, 3*M_PI/2);
-            // ROS_INFO("NO CLEAR --> RANDOM");
+            if (robsLaserDist < lobsLaserDist){
+                finalLaserAngle = robsLaserAngle + asin((0.5 * (robotWidth + edge_clearance)) / robsLaserDist);
+                ROS_INFO("PREVIOUSLY  --> RANDOM");
+            }
+            else if (lobsLaserDist < robsLaserDist){
+                finalLaserAngle = lobsLaserAngle - asin((0.5 * (robotWidth + edge_clearance)) / lobsLaserDist);
+                ROS_INFO("PREVIOUSLY --> RANDOM");
+            }
+ 
+            // finalLaserAngle = getRandomAngle(M_PI /2, M_PI);
+
             
         }
         // ROS_INFO("edge chord %0.2f  |   av edge angle %0.2f", avEdgeChord, avEdgeAngle);
@@ -428,15 +437,15 @@ void scanningBehaviour(){
         pickBestPath();
  
 
-        // ROS_INFO("ZERO edge case: %s", !right_edge_found && !left_edge_found ? "true" : "false");
-        // ROS_INFO("ONE edge case: %s", right_edge_found ^ left_edge_found ? "true" : "false");
-        // ROS_INFO("TWO edge case: %s", right_edge_found && left_edge_found ? "true" : "false");
+        ROS_INFO("ZERO edge case: %s", !right_edge_found && !left_edge_found ? "true" : "false");
+        ROS_INFO("ONE edge case: %s", right_edge_found ^ left_edge_found ? "true" : "false");
+        ROS_INFO("TWO edge case: %s", right_edge_found && left_edge_found ? "true" : "false");
 
-        // ROS_INFO("rightPass: %s", rightPathClear ? "true" : "false");
-        // ROS_INFO("leftPass: %s", leftPathClear ? "true" : "false");
-        // ROS_INFO("bothPass: %s", maxPathClear ? "true" : "false");
-        // ROS_INFO("neitherPass: %s", noClearPath ? "true" : "false");
-        // ROS_INFO("final angle: %0.2f", finalLaserAngle);
+        ROS_INFO("rightPass: %s", rightPathClear ? "true" : "false");
+        ROS_INFO("leftPass: %s", leftPathClear ? "true" : "false");
+        ROS_INFO("bothPass: %s", maxPathClear ? "true" : "false");
+        ROS_INFO("neitherPass: %s", noClearPath ? "true" : "false");
+        ROS_INFO("final angle: %0.2f", finalLaserAngle);
         takeStep();
     }
     else if(step == 2){
