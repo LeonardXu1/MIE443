@@ -27,6 +27,7 @@ void maxLaserData();
 float getRandomAngle(float minAngle, float maxAngle);
 void rightEdgeFinder();
 void leftEdgeFinder();
+int minLaserDirection();
 void findAllEdges();
 void pickBestPath();
 void scanningBehaviour();

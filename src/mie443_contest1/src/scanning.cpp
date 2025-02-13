@@ -59,6 +59,27 @@ void maxLaserData()
     }
     // ROS_INFO("max distance %0.2f    | max laser angle %0.2f   | max laser index %0.2f", maxLaserDist, maxLaserAngle, maxLaserIdx);
 }
+
+float minLaserDist;
+float minLaserAngle;
+int minLaserIdx;
+
+void minLaserData()
+{   
+    // Assigning variable placeholder values 
+    minLaserDist = std::numeric_limits<float>::infinity();
+    minLaserAngle = 0.0;
+    minLaserIdx = -1;               //set to -1 to be a placeholder for "no valid index"
+    
+    for (uint32_t laser_idx = 0; laser_idx < dat.nLasers; ++ laser_idx){        //cycle through all laser distances and store the min distance and corresponding index, as well as index's angle
+        if (dat.ranges[laser_idx] < minLaserDist){
+            minLaserDist = dat.ranges[laser_idx];
+            minLaserIdx = laser_idx;
+            // minLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
+        }
+    }
+    // ROS_INFO("min distance %0.2f    | min laser angle %0.2f   | min laser index %0.2f", minLaserDist, minLaserAngle, minLaserIdx);
+}
     
 // ****STEP 2: Find Next Edge to the RIGHT [of maxLaser]
 //Associated Variables
@@ -208,24 +229,11 @@ void findAllEdges()
 }
 
 
-float minLaserDist;
-float minLaserAngle;
-int minLaserIdx;
+
 //Replacing random angles
 void turn_direction()
 {
-    // Assigning variable placeholder values 
-    minLaserDist = 10000;
-    // minLaserAngle = 0.0;
-    minLaserIdx = -1;               //set to -1 to be a placeholder for "no valid index"
-    
-    for (uint32_t laser_idx = 0; laser_idx < dat.nLasers; ++ laser_idx){        //cycle through all laser distances and store the min distance and corresponding index, as well as index's angle
-        if (dat.ranges[laser_idx] < minLaserDist){
-            minLaserDist = dat.ranges[laser_idx];
-            minLaserIdx = laser_idx;
-            // minLaserAngle = dat.angle_min + maxLaserIdx * dat.angle_increment;
-        }
-    }
+    minLaserData();
 
     int center_idx = dat.ranges.size() / 2;
     
@@ -234,6 +242,20 @@ void turn_direction()
     }
     else{
         finalLaserAngle = -M_PI /6;
+    }
+}
+
+int minLaserDirection()
+{
+    minLaserData();
+    
+    int center_idx = dat.ranges.size() / 2;
+    
+    if (minLaserIdx < center_idx){
+        return CW;
+    }
+    else{
+        return CCW;
     }
 }
 

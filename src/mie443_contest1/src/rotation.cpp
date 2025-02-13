@@ -6,7 +6,6 @@ bool isNewSpace(){
     posS curPos = getAbsPos();
     float travel = calcDistance(prevRotationPos, curPos);
     if(travel >= NEW_SPACE_THRESHOLD){
-        ROS_INFO("new space travel: %f", travel);
         return true;
     }
 

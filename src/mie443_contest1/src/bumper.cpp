@@ -1,19 +1,22 @@
 #include "../include/bumper.h"
-bool bumperBehaviourComplete = false;
-bool bumperRandomComplete = false;
-int bumperRandomNum;
-int randomAngleDegrees;
-double randomAngleRadians;
 uint8_t bumper[3] = {kobuki_msgs::BumperEvent::RELEASED, kobuki_msgs::BumperEvent::RELEASED, kobuki_msgs::BumperEvent::RELEASED};
-std::string bumperPosition;
+string bumpedPosition;
+int turnDirectionLaser;
+
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr &msg)
 {
     bumper[msg->bumper] = msg->state;
+
+    string position = bumperPressedPosition();
+
+    if(position != "NONE"){
+        bumpedPosition = position;
+    }
 }
 
-std::string bumperPressedPosition()
+string bumperPressedPosition()
 {
-    std::string position;
+    string position;
     if (bumper[kobuki_msgs::BumperEvent::LEFT] == kobuki_msgs::BumperEvent::PRESSED)
     {
         position = "LEFT";
@@ -43,116 +46,53 @@ bool isBumperPressed()
     }
     return false;
 }
-std::string savedBumperPosition()
-{
-    if (isBumperPressed() == true)
-    {
-        bumperPosition = bumperPressedPosition();
-    }
-
-    return bumperPosition;
-}
 
 void bumperBehaviour()
 {
     bool taskComplete;
     int step = getStep();
-    if (step == 0)
-    {
-        savedBumperPosition();
+
+    if (step == 0){
         savePos();
         takeStep();
+        ROS_INFO("%s Bumper Pressed", bumpedPosition.c_str());
     }
-    else if (step == 1)
-    {
+    else if (step == 1){
         taskComplete = moveDistance(0.1, SLOW_LINEAR, BACKWARD);
 
-        if (taskComplete)
-        {
+        if (taskComplete){
             takeStep();
         }
     }
-    else if (step == 2)
-    {
+    else if (step == 2){
         savePos();
         takeStep();
+        turnDirectionLaser = minLaserDirection();
+
+        if(turnDirectionLaser == CW){
+            ROS_INFO("Turning CW");
+        }
+        else{
+            ROS_INFO("Turning CCW");
+        }
+        
     }
-    else if (step == 3)
-    {
-
-        if (savedBumperPosition() == "LEFT")
-        {
-            // ROS_INFO("left bumper got pressed");
-
-            taskComplete = moveAngle(50 * M_PI / 180, SLOW_ANGULAR, CW);
-
-            if (taskComplete)
-            {
-                bumperBehaviourComplete = true;
-                takeStep();
-            }
+    else if (step == 3){
+        if (bumpedPosition == "LEFT"){
+            taskComplete = moveAngle(DEG2RAD(50), SLOW_ANGULAR, CW);
+        }
+        else if (bumpedPosition == "RIGHT"){
+            taskComplete = moveAngle(DEG2RAD(50), SLOW_ANGULAR, CCW);
+        }
+        else {
+            taskComplete = moveAngle(DEG2RAD(90), SLOW_ANGULAR, turnDirectionLaser);
         }
 
-        else if (savedBumperPosition() == "RIGHT")
-        {
-            // ROS_INFO("right bumper got pressed");
-
-            taskComplete = moveAngle(50 * M_PI / 180, SLOW_ANGULAR, CCW);
-
-            if (taskComplete)
-            {
-                bumperBehaviourComplete = true;
-                takeStep();
-            }
-        }
-        else if (savedBumperPosition() == "CENTER")
-        {
-            // ROS_INFO("center bumper got pressed");
-
-            if (bumperRandomComplete == false)
-            {
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_int_distribution<int> dis(-1, 1);
-                bumperRandomNum = dis(gen);
-                while (bumperRandomNum == 0)
-                {
-                    // randomNum=dis(gen);
-                    if (bumperRandomNum != 0)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        bumperRandomNum = dis(gen);
-                    }
-                }
-                std::uniform_int_distribution<int> angleDis(95, 160);
-                randomAngleDegrees = angleDis(gen);
-                randomAngleRadians = randomAngleDegrees * M_PI / 180.0;
-            }
-            // ROS_INFO("Random angle: %d degrees, %f radians", randomAngleDegrees, randomAngleRadians);
-            // ROS_INFO("Random direction %i", bumperRandomNum);
-            bumperRandomComplete = true;
-            taskComplete = moveAngle(randomAngleRadians, SLOW_ANGULAR, bumperRandomNum);
-
-            if (taskComplete)
-            {
-                takeStep();
-                bumperRandomComplete = false;
-                bumperBehaviourComplete = true;
-            }
+        if (taskComplete){
+            takeStep();
         }
     }
     else {
         resetState();
     }
-}
-void resetBumperCompletion()
-{
-    bumperBehaviourComplete = false;
-}
-bool isBumperBehaviourComplete()
-{
-    return bumperBehaviourComplete;
 }
