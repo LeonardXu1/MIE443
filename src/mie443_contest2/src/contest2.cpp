@@ -5,6 +5,10 @@
 #include <chrono>
 
 #include <iostream>
+#include <cmath>
+
+#define RAD2DEG(rad) ((rad) * 180. / M_PI)
+#define DEG2RAD(deg) ((deg) * M_PI / 180.)
 
 std::vector<float> positionInput(){
     float x, y, phi;
@@ -25,6 +29,36 @@ std::vector<float> positionInput(){
 
     return inputPos;
 }
+
+int boxInput(){
+    float id;
+    std::cout << "Enter box goal: ";
+
+    std::cin >> id;
+
+    id -= 1;
+
+    return id;
+}
+
+std::vector<float> targetOffset(std::vector<float> target){
+    float x = target[0];
+    float y = target[1];
+    float phi = target[2];
+
+    float offset = 0.5;
+
+    float offsetX = offset * cos(phi);
+    float offsetY = offset * sin(phi);
+    
+    float newX = x + offsetX;
+    float newY = y + offsetY;
+    float newPhi = phi + DEG2RAD(180);
+
+    std::vector<float> newTarget = {newX, newY, newPhi};
+    return newTarget;
+}
+
 
 int main(int argc, char** argv) {
     // Setup ROS.
@@ -57,16 +91,19 @@ int main(int argc, char** argv) {
 
     bool reached;
 
-    // std::vector<float> box1 = boxes.coords[1];
-    // float x = box1[0];
-    // float y = box1[1];
-    // float phi = box1[2];
+    float id = boxInput();
+    std::vector<float> box = boxes.coords[id];
+    box = targetOffset(box);
 
-    std::vector<float> inputPos = positionInput();
+    float x = box[0];
+    float y = box[1];
+    float phi = box[2];
 
-    float x = inputPos[0];
-    float y = inputPos[1];
-    float phi = inputPos[2];
+    // std::vector<float> inputPos = positionInput();
+
+    // float x = inputPos[0];
+    // float y = inputPos[1];
+    // float phi = inputPos[2];
     
     // Execute strategy.
     while(ros::ok() && secondsElapsed <= 300) {
@@ -85,14 +122,25 @@ int main(int argc, char** argv) {
             reached = nav.moveToGoal(x, y, phi);
         }
         else{
-            inputPos = positionInput();
-
-            x = inputPos[0];
-            y = inputPos[1];
-            phi = inputPos[2];
+            id = boxInput();
+            box = boxes.coords[id];
+            box = targetOffset(box);
+        
+            x = box[0];
+            y = box[1];
+            phi = box[2];
 
             reached = false;
         }
+        // else{
+        //     inputPos = positionInput();
+
+        //     x = inputPos[0];
+        //     y = inputPos[1];
+        //     phi = inputPos[2];
+
+        //     reached = false;
+        // }
 
         // imagePipeline.getTemplateID(boxes);
         ros::Duration(0.01).sleep();
