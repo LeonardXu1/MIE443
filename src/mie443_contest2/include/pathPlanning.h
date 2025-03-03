@@ -8,6 +8,7 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
+#include <algorithm>
 class pathPlanning{
     public: 
     std::vector<int>pathPlan(std::vector<double> startPos, Boxes boxCor);
@@ -16,6 +17,7 @@ class pathPlanning{
     double CalDistance(double dx,double dy);
    
     std::vector<int>nearNeighbour(std::vector<std::vector<double>>distanceMatrix);
+    std::vector<int>bruteForce(std::vector<std::vector<double>>distanceMatrix);
 
 };
 #endif

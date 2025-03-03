@@ -75,6 +75,44 @@ std::vector<int>pathPlanning::nearNeighbour(std::vector<std::vector<double>>dist
     //    std::cout<<path[i]<<"";
     // }
     // std::cout<<std::endl;
+    totalDistance+=distanceMatrix[currentLocation][0];
+    std::cout<<totalDistance<<std::endl;
+    return path;
+
+}
+std::vector<int>pathPlanning::bruteForce(std::vector<std::vector<double>>distanceMatrix){
+    std::vector<std::vector<double>>referenceMatrix=distanceMatrix;
+    std::vector<int>path={0,0,0,0,0};
+    //path.reserve(NUMBER_OF_POINT);
+    std::vector<int>boxNumber={1,2,3,4,5};
+    
+
+    
+    double minDistance=std::numeric_limits<double>::infinity();
+    int count=0;
+     do{   
+        double weight=0;        
+        weight+=referenceMatrix[0][boxNumber[0]];//initial point to go
+        for(int j=0;j<boxNumber.size()-1;j++){
+            weight+=referenceMatrix[boxNumber[j]][boxNumber[j+1]];//from inital point to another point to another point
+        }
+        weight+=referenceMatrix[boxNumber.back()][0];//last point return to home
+        std::cout<<weight<<std::endl;
+        if(weight<minDistance){
+            minDistance=weight;
+            path=boxNumber;
+        }
+        count++;
+    }while(std::next_permutation(boxNumber.begin(),boxNumber.end()));
+ 
+        
+        
+    ROS_INFO("count %i",count);
+    std::cout<<minDistance<<std::endl;
+    // for(int i=0;i<path.size();i++){
+    //    std::cout<<path[i]<<"";
+    // }
+    // std::cout<<std::endl;
     return path;
 
 }
