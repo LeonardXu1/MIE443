@@ -40,3 +40,4 @@ int ImagePipeline::getTemplateID(Boxes& boxes) {
     }  
     return template_id;
 }
+//test
