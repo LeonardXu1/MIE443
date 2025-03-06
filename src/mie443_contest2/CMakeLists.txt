@@ -26,7 +26,12 @@ add_executable(contest2
     src/boxes.cpp
     src/navigation.cpp
     src/robot_pose.cpp
+<<<<<<< HEAD
     src/imagePipeline.cpp)
+=======
+    src/imagePipeline.cpp
+    src/pathPlanning.cpp)
+>>>>>>> Leo
 target_link_libraries(contest2 
     ${catkin_LIBRARIES}  
     ${OpenCV_LIBRARIES}  
