@@ -48,15 +48,27 @@ std::vector<float> targetOffset(std::vector<float> target){
 
     float offset = 0.5;
 
-    float offsetX = offset * cos(phi);
-    float offsetY = offset * sin(phi);
+    float offsetX = offset * cos(DEG2RAD(phi));
+    float offsetY = offset * sin(DEG2RAD(phi));
     
     float newX = x + offsetX;
     float newY = y + offsetY;
-    float newPhi = phi + DEG2RAD(180);
+    float newPhi = phi + 180;
+ 
 
     std::vector<float> newTarget = {newX, newY, newPhi};
     return newTarget;
+}
+
+float offsetCalc(float target, float actual){
+    float offset;
+    if(target >= actual){
+        offset = target - actual;
+    }
+    else{
+        offset = -(actual - target);
+    }
+    return offset;
 }
 
 
@@ -75,7 +87,7 @@ int main(int argc, char** argv) {
     }
     for(int i = 0; i < boxes.coords.size(); ++i) {
         std::cout << "Box coordinates: " << std::endl;
-        std::cout << i << " x: " << boxes.coords[i][0] << " y: " << boxes.coords[i][1] << " z: " 
+        std::cout << i+1 << " x: " << boxes.coords[i][0] << " y: " << boxes.coords[i][1] << " z: " 
                   << boxes.coords[i][2] << std::endl;
     }
     // Initialize image objectand subscriber.
@@ -113,15 +125,17 @@ int main(int argc, char** argv) {
         // Use: robotPose.x, robotPose.y, robotPose.phi
 
         ROS_INFO("Robot Position:");
-        ROS_INFO("x: %f y: %f phi: %f", robotPose.x, robotPose.y, robotPose.phi);
+        ROS_INFO("x: %f y: %f phi: %f", robotPose.x, robotPose.y, RAD2DEG(robotPose.phi));
         
         if(!reached){
             ROS_INFO("Goal:");
             ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
     
-            reached = nav.moveToGoal(x, y, phi);
+            reached = nav.moveToGoal(x, y, DEG2RAD(phi));
         }
         else{
+            float phiOffset = offsetCalc(phi, RAD2DEG(robotPose.phi));
+            ROS_INFO("Phi Offset: %f", phiOffset);
             id = boxInput();
             box = boxes.coords[id];
             box = targetOffset(box);
@@ -142,7 +156,7 @@ int main(int argc, char** argv) {
         //     reached = false;
         // }
 
-        // imagePipeline.getTemplateID(boxes);
+        imagePipeline.getTemplateID(boxes);
         ros::Duration(0.01).sleep();
     }
     return 0;
