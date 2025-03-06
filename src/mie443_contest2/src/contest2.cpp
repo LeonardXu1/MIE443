@@ -3,10 +3,8 @@
 #include <robot_pose.h>
 #include <imagePipeline.h>
 #include <chrono>
-<<<<<<< HEAD
 #include <vector>
 #include <pathPlanning.h>
-=======
 
 #include <iostream>
 #include <cmath>
@@ -76,15 +74,15 @@ float offsetCalc(float target, float actual){
 }
 
 
->>>>>>> user_input_movement
 int main(int argc, char** argv) {
     // Setup ROS.
     ros::init(argc, argv, "contest2");
     ros::NodeHandle n;
-    Navigation nav;
+
     // Robot pose object + subscriber.
     RobotPose robotPose(0,0,0);
     ros::Subscriber amclSub = n.subscribe("/amcl_pose", 1, &RobotPose::poseCallback, &robotPose);
+    
     // Initialize box coordinates and templates
     Boxes boxes; 
     if(!boxes.load_coords() || !boxes.load_templates()) {
@@ -99,41 +97,29 @@ int main(int argc, char** argv) {
     std::cout << "Finished BOX PRINTING " << std::endl;
     // Initialize image objectand subscriber.
     ImagePipeline imagePipeline(n);
-<<<<<<< HEAD
     pathPlanning path;
-=======
 
     // Initialize navigation
     Navigation nav;
 
->>>>>>> user_input_movement
     // contest count down timer
     std::chrono::time_point<std::chrono::system_clock> start;
     start = std::chrono::system_clock::now();
     uint64_t secondsElapsed = 0;
-<<<<<<< HEAD
-    bool reached;
-    double xgoal;
-    double ygoal;
-    double ori;
-=======
 
     bool reached;
 
-    float id = boxInput();
-    std::vector<float> box = boxes.coords[id];
-    box = targetOffset(box);
+    std::vector<float> box;
 
-    float x = box[0];
-    float y = box[1];
-    float phi = box[2];
+    float x;
+    float y;
+    float phi;
 
     // std::vector<float> inputPos = positionInput();
 
     // float x = inputPos[0];
     // float y = inputPos[1];
     // float phi = inputPos[2];
->>>>>>> user_input_movement
     
     std::vector<double>startPos = {1,2,3};
     startPos[0]=robotPose.x;
@@ -145,48 +131,45 @@ int main(int argc, char** argv) {
     while(ros::ok() && secondsElapsed <= 300) {
         ros::spinOnce();
         /***YOUR CODE HERE***/
-<<<<<<< HEAD
         //boxes.coords;
         
         int i=0;
         while(i<route.size()){
-            reached=false;
-            xgoal=boxes.coords[route[i]][0];
-            ygoal=boxes.coords[route[i]][1];
-            ori=boxes.coords[route[i]][2];
-            reached=nav.moveToGoal(xgoal,ygoal,ori);
-            if(reached){
-                ROS_INFO("next stop");
-                i++;
+            ROS_INFO("Robot Position:");
+            ROS_INFO("x: %f y: %f phi: %f", robotPose.x, robotPose.y, RAD2DEG(robotPose.phi));
+
+            
+            if(!reached){
+                box = boxes.coords[i];
+                box = targetOffset(box);
+            
+                x = box[0];
+                y = box[1];
+                phi = box[2];
+
+                ROS_INFO("Goal:");
+                ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
+        
+                reached = nav.moveToGoal(x, y, DEG2RAD(phi));
+            }
+            else{
+                float phiOffset = offsetCalc(phi, RAD2DEG(robotPose.phi));
+                ROS_INFO("Phi Offset: %f", phiOffset);
+                box = boxes.coords[i];
+                box = targetOffset(box);
+            
+                x = box[0];
+                y = box[1];
+                phi = box[2];
+    
+                reached = false;
             }
         }
         
-=======
         // Use: boxes.coords
         // Use: robotPose.x, robotPose.y, robotPose.phi
 
-        ROS_INFO("Robot Position:");
-        ROS_INFO("x: %f y: %f phi: %f", robotPose.x, robotPose.y, RAD2DEG(robotPose.phi));
-        
-        if(!reached){
-            ROS_INFO("Goal:");
-            ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
-    
-            reached = nav.moveToGoal(x, y, DEG2RAD(phi));
-        }
-        else{
-            float phiOffset = offsetCalc(phi, RAD2DEG(robotPose.phi));
-            ROS_INFO("Phi Offset: %f", phiOffset);
-            id = boxInput();
-            box = boxes.coords[id];
-            box = targetOffset(box);
-        
-            x = box[0];
-            y = box[1];
-            phi = box[2];
 
-            reached = false;
-        }
         // else{
         //     inputPos = positionInput();
 
@@ -196,9 +179,8 @@ int main(int argc, char** argv) {
 
         //     reached = false;
         // }
->>>>>>> user_input_movement
 
-        imagePipeline.getTemplateID(boxes);
+        // imagePipeline.getTemplateID(boxes);
         ros::Duration(0.01).sleep();
     }
     return 0;
