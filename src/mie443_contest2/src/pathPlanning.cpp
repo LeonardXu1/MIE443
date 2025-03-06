@@ -32,7 +32,7 @@ std::vector<int>pathPlanning::pathPlan(std::vector<double> startPos, Boxes boxCo
         }
 
     }
-    std::vector<int>resultPath=nearNeighbour(distanceMatrix);
+    std::vector<int>resultPath=bruteForce(distanceMatrix);
     for(int i=0;i<resultPath.size();i++){
         ROS_INFO("Path plan is %i",resultPath[i]);
     }

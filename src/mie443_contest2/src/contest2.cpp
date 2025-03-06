@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
     start = std::chrono::system_clock::now();
     uint64_t secondsElapsed = 0;
 
-    bool reached;
+    bool reached = false;
 
     std::vector<float> box;
 
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     // float x = inputPos[0];
     // float y = inputPos[1];
     // float phi = inputPos[2];
-    
+    ros::spinOnce();
     std::vector<double>startPos = {1,2,3};
     startPos[0]=robotPose.x;
     startPos[1]=robotPose.y; 
@@ -135,35 +135,28 @@ int main(int argc, char** argv) {
         
         int i=0;
         while(i<route.size()){
+            ros::spinOnce();
+
             ROS_INFO("Robot Position:");
             ROS_INFO("x: %f y: %f phi: %f", robotPose.x, robotPose.y, RAD2DEG(robotPose.phi));
 
-            
-            if(!reached){
-                box = boxes.coords[i];
-                box = targetOffset(box);
-            
-                x = box[0];
-                y = box[1];
-                phi = box[2];
-
-                ROS_INFO("Goal:");
-                ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
+            box = boxes.coords[route[i]-1];
+            box = targetOffset(box);
         
-                reached = nav.moveToGoal(x, y, DEG2RAD(phi));
-            }
-            else{
-                float phiOffset = offsetCalc(phi, RAD2DEG(robotPose.phi));
-                ROS_INFO("Phi Offset: %f", phiOffset);
-                box = boxes.coords[i];
-                box = targetOffset(box);
-            
-                x = box[0];
-                y = box[1];
-                phi = box[2];
+            x = box[0];
+            y = box[1];
+            phi = box[2];
+
+            ROS_INFO("Goal:");
+            ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
     
-                reached = false;
-            }
+            reached = nav.moveToGoal(x, y, DEG2RAD(phi));
+
+            // float phiOffset = offsetCalc(phi, RAD2DEG(robotPose.phi));
+            // ROS_INFO("Phi Offset: %f", phiOffset);
+
+            i += 1;
+            ros::Duration(2).sleep();
         }
         
         // Use: boxes.coords
