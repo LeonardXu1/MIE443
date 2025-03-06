@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
         
         int i=0;
         while(i<route.size()){
+            reached=false;
             xgoal=boxes.coords[route[i]][0];
             ygoal=boxes.coords[route[i]][1];
             ori=boxes.coords[route[i]][2];
