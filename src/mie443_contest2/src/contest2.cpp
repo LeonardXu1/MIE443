@@ -78,9 +78,13 @@ int main(int argc, char** argv) {
         std::cout << i << " x: " << boxes.coords[i][0] << " y: " << boxes.coords[i][1] << " z: " 
                   << boxes.coords[i][2] << std::endl;
     }
-    // Initialize image objectand subscriber.
+    // Initialize image object and subscriber.
     ImagePipeline imagePipeline(n);
-
+    if(imagePipeline.SURFIntitialize(boxes)==0){
+        imagePipeline.getTemplateID(boxes);
+        std::cout<<"image processing"<<std::endl;
+        }
+    std::cout<<imagePipeline.getTemplateID(boxes)<< std::endl;
     // Initialize navigation
     Navigation nav;
 
@@ -91,7 +95,8 @@ int main(int argc, char** argv) {
 
     bool reached;
 
-    float id = boxInput();
+    // float id = boxInput();
+    int id = 0;
     std::vector<float> box = boxes.coords[id];
     box = targetOffset(box);
 
@@ -108,6 +113,8 @@ int main(int argc, char** argv) {
     // Execute strategy.
     while(ros::ok() && secondsElapsed <= 300) {
         ros::spinOnce();
+
+
         /***YOUR CODE HERE***/
         // Use: boxes.coords
         // Use: robotPose.x, robotPose.y, robotPose.phi
@@ -122,13 +129,15 @@ int main(int argc, char** argv) {
             reached = nav.moveToGoal(x, y, phi);
         }
         else{
-            id = boxInput();
+            // id = boxInput();
+            imagePipeline.getTemplateID(boxes);
             box = boxes.coords[id];
             box = targetOffset(box);
         
             x = box[0];
             y = box[1];
             phi = box[2];
+            
 
             reached = false;
         }
