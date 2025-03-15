@@ -11,13 +11,13 @@
 #include <algorithm>
 class pathPlanning{
     public: 
-    std::vector<int>pathPlan(std::vector<double> startPos, Boxes boxCor);
+    std::vector<int>pathPlan(std::vector<float> startPos, Boxes boxCor);
 
     private:
-    double CalDistance(double dx,double dy);
+    float CalDistance(float dx,float dy);
    
-    std::vector<int>nearNeighbour(std::vector<std::vector<double>>distanceMatrix);
-    std::vector<int>bruteForce(std::vector<std::vector<double>>distanceMatrix);
+    std::vector<int>nearNeighbour(std::vector<std::vector<float>>distanceMatrix);
+    std::vector<int>bruteForce(std::vector<std::vector<float>>distanceMatrix);
 
 };
 #endif

@@ -5,7 +5,7 @@
 #include <chrono>
 #include <vector>
 #include <pathPlanning.h>
-
+#include <geometry_msgs/Twist.h>
 #include <iostream>
 #include <cmath>
 
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     // Robot pose object + subscriber.
     RobotPose robotPose(0,0,0);
     ros::Subscriber amclSub = n.subscribe("/amcl_pose", 1, &RobotPose::poseCallback, &robotPose);
-    
+   
     // Initialize box coordinates and templates
     Boxes boxes; 
     if(!boxes.load_coords() || !boxes.load_templates()) {
@@ -120,12 +120,17 @@ int main(int argc, char** argv) {
     // float x = inputPos[0];
     // float y = inputPos[1];
     // float phi = inputPos[2];
-    ros::spinOnce();
-    std::vector<double>startPos = {1,2,3};
+    for(int i=0;i<3;i++){
+          ros::spinOnce();
+          ros::Duration(0.1).sleep();
+    
+    }
+    bool returnHome=false;
+    std::vector<float>startPos(3);
     startPos[0]=robotPose.x;
-    startPos[1]=robotPose.y; 
+    startPos[1]=robotPose.y;
     startPos[2]=robotPose.phi;
-    ROS_INFO("%d,%d,%d",startPos[0],startPos[1],startPos[2]);
+    ROS_INFO("%f,%f,%f",startPos[0],startPos[1],startPos[2]);
     std::vector <int>route=path.pathPlan(startPos,boxes);
     // Execute strategy.
     while(ros::ok() && secondsElapsed <= 300) {
@@ -134,7 +139,7 @@ int main(int argc, char** argv) {
         //boxes.coords;
         
         int i=0;
-        while(i<route.size()){
+        while(i<route.size()&&returnHome==false){
             ros::spinOnce();
 
             ROS_INFO("Robot Position:");
@@ -155,8 +160,21 @@ int main(int argc, char** argv) {
             // float phiOffset = offsetCalc(phi, RAD2DEG(robotPose.phi));
             // ROS_INFO("Phi Offset: %f", phiOffset);
 
-            i += 1;
+           
             ros::Duration(2).sleep();
+            if(reached){
+                if(i==route.size()-1){
+                    returnHome=true;
+                }
+            }
+            i += 1;
+           
+        }
+        if(returnHome==true){
+            reached=nav.moveToGoal(startPos[0],startPos[1],startPos[2]);
+            if(reached){
+                break;
+            }
         }
         
         // Use: boxes.coords
