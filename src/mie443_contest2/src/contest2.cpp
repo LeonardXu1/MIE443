@@ -135,6 +135,8 @@ int main(int argc, char** argv) {
     // Execute strategy.
     while(ros::ok() && secondsElapsed <= 300) {
         ros::spinOnce();
+
+
         /***YOUR CODE HERE***/
         //boxes.coords;
         
