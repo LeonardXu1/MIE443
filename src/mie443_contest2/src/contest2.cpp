@@ -119,16 +119,16 @@ int main(int argc, char** argv) {
         // Use: boxes.coords
         // Use: robotPose.x, robotPose.y, robotPose.phi
 
-        ROS_INFO("Robot Position:");
-        ROS_INFO("x: %f y: %f phi: %f", robotPose.x, robotPose.y, robotPose.phi);
+      //  ROS_INFO("Robot Position:");
+        //ROS_INFO("x: %f y: %f phi: %f", robotPose.x, robotPose.y, robotPose.phi);
         
-        if(!reached){
-            ROS_INFO("Goal:");
-            ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
+        // if(!reached){
+        //     //ROS_INFO("Goal:");
+        //     //ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
     
-            reached = nav.moveToGoal(x, y, phi);
-        }
-        else{
+        //     reached = nav.moveToGoal(x, y, phi);
+        // }
+        // else{
             // id = boxInput();
             imagePipeline.getTemplateID(boxes);
             box = boxes.coords[id];
@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
             
 
             reached = false;
-        }
+       // }
         // else{
         //     inputPos = positionInput();
 
