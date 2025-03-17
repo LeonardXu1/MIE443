@@ -98,7 +98,10 @@ int main(int argc, char** argv) {
     // Initialize image objectand subscriber.
     ImagePipeline imagePipeline(n);
     pathPlanning path;
-
+    if(imagePipeline.SURFIntitialize(boxes)==0){
+        std::cout<<"SURF initilized"<<std::endl;
+    }
+    std::vector<int> templateIDS={-3,-3,-3,-3,-3};
     // Initialize navigation
     Navigation nav;
 
@@ -165,6 +168,20 @@ int main(int argc, char** argv) {
            
             ros::Duration(2).sleep();
             if(reached){
+                ros::Duration(5).sleep();
+                if(templateIDS[i]==-3){
+                    int maxAttemps=3;
+                    int attempt=1;
+                    templateIDS[i]=imagePipeline.getTemplateID(boxes);
+                    while(templateIDS[i]<0&&attempt<maxAttemps){
+                        ros::Duration(2).sleep();
+                        ros::spinOnce();
+                        templateIDS[i]=imagePipeline.getTemplateID(boxes);
+                        attempt++;
+                    }
+                    reached=false;
+                }
+                
                 if(i==route.size()-1){
                     returnHome=true;
                 }
@@ -175,6 +192,21 @@ int main(int argc, char** argv) {
         if(returnHome==true){
             reached=nav.moveToGoal(startPos[0],startPos[1],startPos[2]);
             if(reached){
+                for(int j=0;j<templateIDS.size();j++){
+                    std::cout<<"template ID: "<<templateIDS[j]<<std::endl;
+                    if(templateIDS[j]==-2){
+                        std::cout<<"Prob blank "<<std::endl;
+                    }
+                    std::cout<<"Its location: "<<std::endl;
+                    
+                    x = boxes.coords[route[j]-1][0];
+                    y = boxes.coords[route[j]-1][1];
+                    phi = boxes.coords[route[j]-1][2];
+        
+                    ROS_INFO("x: %f y: %f phi: %f", x, y, phi);
+                    
+        
+                }
                 break;
             }
         }
@@ -195,6 +227,7 @@ int main(int argc, char** argv) {
 
         // imagePipeline.getTemplateID(boxes);
         ros::Duration(0.01).sleep();
+        
     }
     return 0;
 }

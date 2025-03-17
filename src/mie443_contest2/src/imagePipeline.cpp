@@ -240,7 +240,7 @@ int ImagePipeline::confidenceLevel(Boxes &boxes)
             // Display the visualization
            
         } else {
-            template_id = -1;  // No good match found
+            template_id = -2;  // No good match found
             std::cout << "No confident match found prob blank. Best confidence: " << max_confidence << std::endl;
         }
         
