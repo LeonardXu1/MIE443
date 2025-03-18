@@ -48,7 +48,7 @@ std::vector<float> targetOffset(std::vector<float> target){
     float y = target[1];
     float phi = target[2];
 
-    float offset = 0.5;
+    float offset = 0.45;
 
     float offsetX = offset * cos(DEG2RAD(phi));
     float offsetY = offset * sin(DEG2RAD(phi));
@@ -166,15 +166,17 @@ int main(int argc, char** argv) {
             // ROS_INFO("Phi Offset: %f", phiOffset);
 
            
-            ros::Duration(2).sleep();
+            //ros::Duration(2).sleep();
             if(reached){
-                ros::Duration(5).sleep();
+                //ros::Duration(5).sleep();
                 if(templateIDS[i]==-3){
+                   // templateIDS[i]=-99;
+                    ros::spinOnce();
                     int maxAttemps=3;
                     int attempt=1;
                     templateIDS[i]=imagePipeline.getTemplateID(boxes);
                     while(templateIDS[i]<0&&attempt<maxAttemps){
-                        ros::Duration(2).sleep();
+                        //ros::Duration(2).sleep();
                         ros::spinOnce();
                         templateIDS[i]=imagePipeline.getTemplateID(boxes);
                         attempt++;

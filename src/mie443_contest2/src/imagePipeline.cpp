@@ -327,6 +327,6 @@ else{
 }
     cv::namedWindow("Template matching",cv::WINDOW_NORMAL);    
     cv::imshow("Template Matching",imageMatches);
-    cv::waitKey(10);
+    cv::waitKey(2000);
     return imageMatches;
 }
