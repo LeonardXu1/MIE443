@@ -1,6 +1,6 @@
 #include <imagePipeline.h>
 
-#define CONFIDENCE_THRESHOLD 0.047
+#define CONFIDENCE_THRESHOLD 0.08
 #define MIN_REQUIRED_KEYPOINTS 50
 ImagePipeline::ImagePipeline(ros::NodeHandle &n)
 {
@@ -52,7 +52,7 @@ int ImagePipeline::getTemplateID(Boxes &boxes)
 
         SURFIntitialize(boxes);
         template_id=confidenceLevel(boxes);
-        cv::imshow("view", img);
+        //cv::imshow("view", img);
         cv::waitKey(10);
     }
     return template_id;
@@ -85,7 +85,7 @@ int ImagePipeline::SURFIntitialize(Boxes &boxes)
         ImageData imgData;
         // load image
         imgData.greyImage = boxes.templates[i];
-        // cv::cvtColor(boxes.templates[i], imgData.greyImage, cv::COLOR_RGBA2GRAY,0);
+        
         // confirm image loaded
         if (imgData.greyImage.empty())
         {
@@ -103,11 +103,8 @@ int ImagePipeline::SURFIntitialize(Boxes &boxes)
             return -1;
         }
         processedImages.push_back(imgData); // store processed image data in global variable
-        // cv::imshow("grey Image",imgData.greyImage);
-        // std::cout<< " image "<< i << std::endl;
-        // cv::imshow("stored in globalVariable", processedImages[i].greyImage);
     }
-    // cv::imshow("stored in globalVariable", processedImages[1].greyImage);
+    
     return 0; // Succesfull in image retrieval and processing
 }
 
@@ -159,14 +156,7 @@ int ImagePipeline::confidenceLevel(Boxes &boxes)
 
         // Detect keypoints and compute descriptors for the captured image
         detector->detectAndCompute(liveImage.greyImage, cv::noArray(), liveImage.keypoints, liveImage.descriptors);
-        //white or blank pic
-        // if(liveImage.keypoints.size()<MIN_REQUIRED_KEYPOINTS){
-        //     std::cout<<"Prob blank or black image"<<liveImage.keypoints.size()<<"< required matching points"<<std::endl;
-        //     return -1;
-        // }
-        // cv::imshow("stored in globalVariable", liveImage.greyImage);
 
-        // int numTemplates = boxes.templates.size();
         std::vector<cv::DMatch> bestMatches;
 
         double max_confidence = 0.0;
@@ -258,7 +248,6 @@ cv::Mat ImagePipeline::drawSceneMatches(
     // Create output image
     cv::Mat imageMatches;
     
-    // Draw matches between object and scene
     cv::drawMatches(
         imgObject, keypointsObject, 
         imageScene, keypointsScene, 
@@ -268,12 +257,12 @@ cv::Mat ImagePipeline::drawSceneMatches(
         cv::DrawMatchesFlags::DEFAULT
     );
     
-    // Extract matching points for homography calculation
+ 
     std::vector<cv::Point2f> obj;
     std::vector<cv::Point2f> scene;
     cv::Mat display_copy=imageMatches.clone();
     for (size_t i = 0; i < matches.size(); i++) {
-        // Get the keypoints from the good matches
+
         obj.push_back(keypointsObject[matches[i].queryIdx].pt);
         scene.push_back(keypointsScene[matches[i].trainIdx].pt);
         cv::Point2f point1=keypointsObject[matches[i].queryIdx].pt;
@@ -284,10 +273,10 @@ cv::Mat ImagePipeline::drawSceneMatches(
     
     // Only proceed if we have enough points for homography
     if (obj.size() >= 4) {
-        // Find homography matrix
+        
         cv::Mat H = cv::findHomography(obj, scene, cv::RANSAC,3);
         
-        // Define corners of object to be detected
+       
         if(!H.empty()){
         std::vector<cv::Point2f> objCorners(4);
         objCorners[0] = cv::Point2f(0, 0);

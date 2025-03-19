@@ -11,73 +11,57 @@
 
 #define RAD2DEG(rad) ((rad) * 180. / M_PI)
 #define DEG2RAD(deg) ((deg) * M_PI / 180.)
-bool navigateToBoxMultiAngle(Navigation& nav, const std::vector<float>& boxCoords) {
-    float boxX = boxCoords[0];
-    float boxY = boxCoords[1];
-    float boxPhi = boxCoords[2];
-    
-    // Different angles to try (in degrees relative to box orientation)
-    std::vector<float> angleOffsets = {0, 45, -45, 90, -90, 135, -135, 180};
-    
-    ROS_INFO("Starting multi-angle navigation to box at (%.2f, %.2f)", boxX, boxY);
-    
-    // Try each approach angle
-    for (size_t angleIndex = 0; angleIndex < angleOffsets.size(); angleIndex++) {
-        float approachAngle = boxPhi + angleOffsets[angleIndex];
-        // Normalize to -180 to 180 range
-        while (approachAngle > 180) approachAngle -= 360;
-        while (approachAngle < -180) approachAngle += 360;
-        
-        ROS_INFO("Trying approach angle %.2f (offset %.2f from box)", 
-                 approachAngle, angleOffsets[angleIndex]);
-        
-        // Step 1: Go to a position far from the box
-        float farDist = 1.2;  // Farther distance to avoid obstacles
-        float farX = boxX + farDist * cos(DEG2RAD(approachAngle));
-        float farY = boxY + farDist * sin(DEG2RAD(approachAngle));
-        float farPhi = atan2(boxY-farY,boxX-farX)*180/M_PI;  // Face toward the box
-        
-        // Normalize phi
-        while (farPhi > 180) farPhi -= 360;
-        while (farPhi < -180) farPhi += 360;
-        
-        ROS_INFO("Step 1: Moving to position (%.2f, %.2f) at angle %.2f", 
-                 farX, farY, farPhi);
-        
-        bool reached = nav.moveToGoal(farX, farY, DEG2RAD(farPhi));
-        
-        if (!reached) {
-            ROS_WARN("Failed to reach far position with angle %.2f, trying next angle", 
-                     approachAngle);
-            // Let the built-in recovery happen
-            continue;  // Try next angle
-        }
-        
-        ros::Duration(1.0).sleep();  // Brief pause
-        
-        // Step 2: Go to final viewing position directly
-        // (Skip the intermediate step to simplify)
-        float viewDist = 0.5;  // Viewing distance
-        float viewX = boxX + viewDist * cos(DEG2RAD(boxPhi));
-        float viewY = boxY + viewDist * sin(DEG2RAD(boxPhi));
-        float viewAngle=boxPhi+180;
-        ROS_INFO("Step 2: Moving to viewing position (%.2f, %.2f)", viewX, viewY);
-        
-        reached = nav.moveToGoal(viewX, viewY, DEG2RAD(viewAngle));
-        
-        if (reached) {
-            ROS_INFO("Successfully reached viewing position!");
-            return true;
-        } else {
-            ROS_WARN("Failed to reach viewing position with angle %.2f, trying next angle", 
-                     approachAngle);
-            // Let the built-in recovery happen
-        }
-    }
-    
-    ROS_ERROR("Failed to reach box with all approach angles");
-    return false;
+bool findAdaptiveOffset(Navigation& nav, const std::vector<float>& boxCoords, 
+    float& outX, float& outY, float& outPhi) {
+float boxX = boxCoords[0];
+float boxY = boxCoords[1];
+float boxPhi = boxCoords[2];
+
+float offsetDistStart = 0.5;            
+float offsetDistLimit = 1.2;           
+float offsetDistStep = 0.1;             // Distance increment, try different distance
+
+float offsetAngleLimit = DEG2RAD(90);   
+float offsetAngleStep = DEG2RAD(15);    // Angle increment (15 degrees), try different approaching angle
+
+ROS_INFO("Starting adaptive offset approach to box at (%.2f, %.2f)", boxX, boxY);
+for (float offAngle = 0; offAngle <= offsetAngleLimit; ) {
+    for (float offDist = offsetDistStart; offDist <= offsetDistLimit; offDist += offsetDistStep) {
+float newX = boxX + offDist * cos(boxPhi + offAngle);
+float newY = boxY + offDist * sin(boxPhi + offAngle);
+
+float faceAngle = atan2(boxY - newY, boxX - newX);
+
+ROS_INFO("Trying offset: dist=%.2f, angle=%.2f degrees", 
+offDist, RAD2DEG(offAngle));
+ROS_INFO("Position: (%.2f, %.2f), facing: %.2f", 
+newX, newY, RAD2DEG(faceAngle));
+
+bool reached = nav.moveToGoal(newX, newY, faceAngle);
+
+if (reached) {
+ROS_INFO("Successfully reached offset position!");
+outX = newX;
+outY = newY;
+outPhi = faceAngle;
+
+return true;
 }
+
+ros::Duration(0.5).sleep();
+}
+
+if (offAngle > 0) {
+offAngle = -offAngle;  // try angle from negative to positive
+} else {
+offAngle = -offAngle + offsetAngleStep;  
+}
+}
+
+ROS_ERROR("Failed to find valid position after trying all offsets");
+return false;
+}
+
 
 std::vector<float> positionInput(){
     float x, y, phi;
@@ -109,78 +93,7 @@ int boxInput(){
 
     return id;
 }
-bool navigateToBoxSimple(Navigation& nav, const std::vector<float>& boxCoords) {
-    float boxX = boxCoords[0];
-    float boxY = boxCoords[1];
-    float boxPhi = boxCoords[2];
-    
-    // Try just the main approach angle
-    float approachAngle = boxPhi;
-    
-    // First try direct approach at 0.7m (slightly farther than your original 0.5m)
-    float dist = 0.5;
-    float targetX = boxX + dist * cos(DEG2RAD(approachAngle));
-    float targetY = boxY + dist * sin(DEG2RAD(approachAngle));
-    float targetPhi = approachAngle + 180;  // Face the box
-    
-    // Normalize phi
-    while (targetPhi > 180) targetPhi -= 360;
-    while (targetPhi < -180) targetPhi += 360;
-    
-    ROS_INFO("Trying direct approach at distance %.2f", dist);
-    bool reached = nav.moveToGoal(targetX, targetY, DEG2RAD(targetPhi));
-    
-    if (reached) {
-        ROS_INFO("Direct approach successful!");
-        return true;
-    }
-    
-    // If direct approach failed, try from 90 degrees to the side
-    ROS_INFO("Direct approach failed, trying from right side");
-    
-    // Try approaching from the right side (+90 degrees)
-    approachAngle = boxPhi +90;
-    // Normalize
-    while (approachAngle > 180) approachAngle -= 360;
-    
-    targetX = boxX + dist * cos(DEG2RAD(approachAngle));
-    targetY = boxY + dist * sin(DEG2RAD(approachAngle));
-    //targetPhi = approachAngle + 180;
-    targetPhi=atan2(boxY-targetY,boxX-targetX)*180/M_PI-10;
-    // Normalize phi
-    while (targetPhi > 180) targetPhi -= 360;
-    
-    reached = nav.moveToGoal(targetX, targetY, DEG2RAD(targetPhi));
-    
-    if (reached) {
-        ROS_INFO("Side approach successful!");
-        return true;
-    }
-    
-    // If that failed too, try from the left side (-90 degrees)
-    ROS_INFO("Right side approach failed, trying from left side");
-    
-    approachAngle = boxPhi - 90;
-    // Normalize
-    while (approachAngle < -180) approachAngle += 360;
-    
-    targetX = boxX + dist * cos(DEG2RAD(approachAngle));
-    targetY = boxY + dist * sin(DEG2RAD(approachAngle));
-   // targetPhi = approachAngle + 180;
-   targetPhi=atan2(boxY-targetY,boxX-targetX)*180/M_PI+10;
-    // Normalize phi
-    while (targetPhi > 180) targetPhi -= 360;
-    
-    reached = nav.moveToGoal(targetX, targetY, DEG2RAD(targetPhi));
-    
-    if (reached) {
-        ROS_INFO("Left side approach successful!");
-        return true;
-    }
-    
-    ROS_ERROR("All approach attempts failed");
-    return false;
-}
+
 
     
   
@@ -189,7 +102,7 @@ std::vector<float> targetOffset(std::vector<float> target){
     float y = target[1];
     float phi = target[2];
 
-    float offset = 0.45;
+    float offset = 0.5;
 
     float offsetX = offset * cos(DEG2RAD(phi));
     float offsetY = offset * sin(DEG2RAD(phi));
@@ -197,6 +110,7 @@ std::vector<float> targetOffset(std::vector<float> target){
     float newX = x + offsetX;
     float newY = y + offsetY;
     float newPhi = phi + 180;
+    //float newPhi=atan2(y - newY, x - newX);
  
 
     std::vector<float> newTarget = {newX, newY, newPhi};
@@ -259,11 +173,6 @@ int main(int argc, char** argv) {
     float y;
     float phi;
 
-    // std::vector<float> inputPos = positionInput();
-
-    // float x = inputPos[0];
-    // float y = inputPos[1];
-    // float phi = inputPos[2];
     for(int i=0;i<3;i++){
           ros::spinOnce();
           ros::Duration(0.1).sleep();
@@ -304,17 +213,19 @@ int main(int argc, char** argv) {
             // reached = nav.moveToGoal(x, y, DEG2RAD(phi));
              
              std::vector<float> boxCoords = boxes.coords[route[i]-1];
-             reached = navigateToBoxMultiAngle(nav, boxCoords);
+             reached = findAdaptiveOffset(nav, boxCoords, x, y, phi);
+
+
 
             // float phiOffset = offsetCalc(phi, RAD2DEG(robotPose.phi));
             // ROS_INFO("Phi Offset: %f", phiOffset);
 
            
-            //ros::Duration(2).sleep();
+            
             if(reached){
-                //ros::Duration(5).sleep();
+                
                 if(templateIDS[i]==-3){
-                   // templateIDS[i]=-99;
+                   
                     ros::spinOnce();
                     int maxAttemps=3;
                     int attempt=1;
