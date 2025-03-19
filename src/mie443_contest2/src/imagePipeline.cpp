@@ -1,6 +1,6 @@
 #include <imagePipeline.h>
 
-#define CONFIDENCE_THRESHOLD 0.05
+#define CONFIDENCE_THRESHOLD 0.047
 #define MIN_REQUIRED_KEYPOINTS 50
 ImagePipeline::ImagePipeline(ros::NodeHandle &n)
 {
