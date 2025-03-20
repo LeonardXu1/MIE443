@@ -11,7 +11,120 @@
 
 #define RAD2DEG(rad) ((rad) * 180. / M_PI)
 #define DEG2RAD(deg) ((deg) * M_PI / 180.)
-bool findAdaptiveOffset(Navigation& nav, const std::vector<float>& boxCoords, 
+bool findAdaptiveOffsetAnglePrio(Navigation& nav, const std::vector<float>& boxCoords, 
+    float& outX, float& outY, float& outPhi) {
+float boxX = boxCoords[0];
+float boxY = boxCoords[1];
+float boxPhi = boxCoords[2];
+
+// Configure search parameters
+float offsetDistStart = 0.5;            
+float offsetDistLimit = 1.2;            
+float offsetDistStep = 0.1;             
+
+float offsetAngleLimit = DEG2RAD(90);   
+float offsetAngleStep = DEG2RAD(15);    
+
+ROS_INFO("Starting adaptive offset approach to box at (%.2f, %.2f) with new search pattern", boxX, boxY);
+
+
+for (float offDist = offsetDistStart; offDist <= offsetDistLimit; offDist += offsetDistStep) {
+ROS_INFO("Trying with distance: %.2f meters", offDist);
+
+
+float offAngle = 0;
+
+
+{
+
+float newX = boxX + offDist * cos(boxPhi + offAngle);
+float newY = boxY + offDist * sin(boxPhi + offAngle);
+
+
+float faceAngle = atan2(boxY - newY, boxX - newX);
+
+ROS_INFO("Trying offset: dist=%.2f, angle=%.2f degrees", 
+offDist, RAD2DEG(offAngle));
+ROS_INFO("Position: (%.2f, %.2f), facing: %.2f", 
+newX, newY, RAD2DEG(faceAngle));
+
+bool reached = nav.moveToGoal(newX, newY, faceAngle);
+
+if (reached) {
+ROS_INFO("Successfully reached offset position!");
+
+// Set the output position values to use in your code
+outX = newX;
+outY = newY;
+outPhi = faceAngle;
+
+return true;
+}
+
+
+ros::Duration(0.5).sleep();
+}
+
+
+for (float angle = offsetAngleStep; angle <= offsetAngleLimit; angle += offsetAngleStep) {
+
+{
+offAngle = angle;
+float newX = boxX + offDist * cos(boxPhi + offAngle);
+float newY = boxY + offDist * sin(boxPhi + offAngle);
+float faceAngle = atan2(boxY - newY, boxX - newX);
+
+ROS_INFO("Trying offset: dist=%.2f, angle=+%.2f degrees", 
+   offDist, RAD2DEG(offAngle));
+ROS_INFO("Position: (%.2f, %.2f), facing: %.2f", 
+   newX, newY, RAD2DEG(faceAngle));
+
+bool reached = nav.moveToGoal(newX, newY, faceAngle);
+
+if (reached) {
+ROS_INFO("Successfully reached offset position!");
+outX = newX;
+outY = newY;
+outPhi = faceAngle;
+return true;
+}
+
+ros::Duration(0.5).sleep();
+}
+
+// Try negative angle
+{
+offAngle = -angle;
+float newX = boxX + offDist * cos(boxPhi + offAngle);
+float newY = boxY + offDist * sin(boxPhi + offAngle);
+float faceAngle = atan2(boxY - newY, boxX - newX);
+
+ROS_INFO("Trying offset: dist=%.2f, angle=-%.2f degrees", 
+   offDist, RAD2DEG(-offAngle));
+ROS_INFO("Position: (%.2f, %.2f), facing: %.2f", 
+   newX, newY, RAD2DEG(faceAngle));
+
+bool reached = nav.moveToGoal(newX, newY, faceAngle);
+
+if (reached) {
+ROS_INFO("Successfully reached offset position!");
+outX = newX;
+outY = newY;
+outPhi = faceAngle;
+return true;
+}
+
+ros::Duration(0.5).sleep();
+}
+}
+
+ROS_INFO("No valid approach angles found at distance %.2f meters, trying farther...", offDist);
+}
+
+ROS_ERROR("Failed to find valid position after trying all offsets");
+return false;
+}
+bool findAdaptiveOffsetDistPrio(Navigation& nav, const std::vector<float>& boxCoords, 
     float& outX, float& outY, float& outPhi) {
 float boxX = boxCoords[0];
 float boxY = boxCoords[1];
@@ -61,7 +174,108 @@ offAngle = -offAngle + offsetAngleStep;
 ROS_ERROR("Failed to find valid position after trying all offsets");
 return false;
 }
-
+bool adaptiveReturnHome(Navigation& nav, const std::vector<float>& homePos) {
+    float homeX = homePos[0];
+    float homeY = homePos[1];
+    float homePhi = homePos[2];
+    
+    ROS_INFO("Attempting to return to home position (%.2f, %.2f, %.2f)", 
+             homeX, homeY, homePhi);
+    
+    // First try direct return
+    bool reached = nav.moveToGoal(homeX, homeY, homePhi);
+    if (reached) {
+        ROS_INFO("Successfully returned home with direct path!");
+        return true;
+    }
+    
+    ROS_WARN("Direct path home failed. Trying adaptive return approaches...");
+    
+    float approachDist = 1.0;             // Distance from home to approach from
+    float angleStep = DEG2RAD(45);        // 45 degree steps for wider variation
+    float maxAngle = DEG2RAD(315);        // Try full 360 degrees (minus last step)
+    
+   
+    for (float angle = 0; angle <= maxAngle; angle += angleStep) {
+       
+        float approachX = homeX + approachDist * cos(angle);
+        float approachY = homeY + approachDist * sin(angle);
+        
+  
+        
+        ROS_INFO("Trying approach angle %.2f degrees", RAD2DEG(angle));
+        ROS_INFO("Approach position: (%.2f, %.2f)", approachX, approachY);
+        
+        // First move to approach position
+        reached = nav.moveToGoal(approachX, approachY, homePhi);
+        
+        if (!reached) {
+            ROS_WARN("Failed to reach approach position at angle %.2f, trying next angle",
+                     RAD2DEG(angle));
+            continue;
+        }
+        
+        
+        ROS_INFO("Reached approach position. Now moving to final home position...");
+        
+      
+        reached = nav.moveToGoal(homeX, homeY, homePhi);
+        
+        if (reached) {
+            ROS_INFO("Successfully returned home via approach angle %.2f!", RAD2DEG(angle));
+            return true;
+        } else {
+            ROS_WARN("Failed to reach home from approach position. Trying next angle.");
+        }
+        
+        
+        ros::Duration(0.5).sleep();
+    }
+    
+   
+    
+    ROS_WARN("All standard approaches failed. Attempting waypoint navigation");
+    
+    
+    float farDist = 2.0; 
+    
+    for (float angle = 0; angle <= maxAngle; angle += angleStep) {
+     
+        float waypointX = homeX + farDist * cos(angle);
+        float waypointY = homeY + farDist * sin(angle);
+        
+        ROS_INFO("Trying waypoint at angle %.2f, distance %.2f", 
+                 RAD2DEG(angle), farDist);
+        
+      
+        reached = nav.moveToGoal(waypointX, waypointY, homePhi);
+        
+        if (!reached) {
+            continue;  
+        }
+        
+     
+        float approachX = homeX + approachDist * cos(angle);
+        float approachY = homeY + approachDist * sin(angle);
+        
+        reached = nav.moveToGoal(approachX, approachY, homePhi);
+        
+        if (!reached) {
+            continue;  
+        }
+        
+     
+        reached = nav.moveToGoal(homeX, homeY, homePhi);
+        
+        if (reached) {
+            ROS_INFO("Successfully returned home via waypoint and approach position!");
+            return true;
+        }
+    }
+    
+    ROS_ERROR("All return home attempts failed.");
+    return false;
+}
 
 std::vector<float> positionInput(){
     float x, y, phi;
@@ -213,7 +427,7 @@ int main(int argc, char** argv) {
             // reached = nav.moveToGoal(x, y, DEG2RAD(phi));
              
              std::vector<float> boxCoords = boxes.coords[route[i]-1];
-             reached = findAdaptiveOffset(nav, boxCoords, x, y, phi);
+             reached = findAdaptiveOffsetAnglePrio(nav, boxCoords, x, y, phi);
 
 
 
@@ -247,7 +461,8 @@ int main(int argc, char** argv) {
            
         }
         if(returnHome==true){
-            reached=nav.moveToGoal(startPos[0],startPos[1],startPos[2]);
+            //reached=nav.moveToGoal(startPos[0],startPos[1],startPos[2]);
+             reached = adaptiveReturnHome(nav, startPos);
             if(reached){
                 for(int j=0;j<templateIDS.size();j++){
                     std::cout<<"template ID: "<<templateIDS[j]<<std::endl;
