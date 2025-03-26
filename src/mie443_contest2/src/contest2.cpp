@@ -20,7 +20,7 @@ bool findAdaptiveOffsetAnglePrio(Navigation &nav, const std::vector<float> &boxC
 
     float offsetDistStart = 0.5;
     float offsetDistLimit = 1.2;
-    float offsetDistStep = 0.1;
+    float offsetDistStep = 0.05;
 
     float offsetAngleLimit = DEG2RAD(90);
     float offsetAngleStep = DEG2RAD(15);
@@ -35,10 +35,17 @@ bool findAdaptiveOffsetAnglePrio(Navigation &nav, const std::vector<float> &boxC
 
         {
 
+          
+            float faceAngle=boxPhi+M_PI;
+            while(faceAngle>M_PI){
+                faceAngle-=2*M_PI;
+            }
+            while(faceAngle<-M_PI){
+                faceAngle+=2*M_PI;
+            }
             float newX = boxX + offDist * cos(boxPhi + offAngle);
             float newY = boxY + offDist * sin(boxPhi + offAngle);
-
-            float faceAngle = atan2(boxY - newY, boxX - newX);
+            //float faceAngle = atan2(boxY - newY, boxX - newX);
 
             ROS_INFO("Trying offset: dist=%.2f, angle=%.2f degrees",
                      offDist, RAD2DEG(offAngle));
@@ -69,8 +76,14 @@ bool findAdaptiveOffsetAnglePrio(Navigation &nav, const std::vector<float> &boxC
                 offAngle = angle;
                 float newX = boxX + offDist * cos(boxPhi + offAngle);
                 float newY = boxY + offDist * sin(boxPhi + offAngle);
-                float faceAngle = atan2(boxY - newY, boxX - newX);
-
+                //float faceAngle = atan2(boxY - newY, boxX - newX);
+                float faceAngle=boxPhi+M_PI;
+                while(faceAngle>M_PI){
+                    faceAngle-=2*M_PI;
+                }
+                while(faceAngle<-M_PI){
+                    faceAngle+=2*M_PI;
+                }
                 ROS_INFO("Trying offset: dist=%.2f, angle=+%.2f degrees",
                          offDist, RAD2DEG(offAngle));
                 ROS_INFO("Position: (%.2f, %.2f), facing: %.2f",
