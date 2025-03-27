@@ -26,7 +26,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
 
-add_executable(contest3 src/contest3.cpp src/color_detector.cpp)
+
 
 target_link_libraries(contest3
   ${catkin_LIBRARIES}
