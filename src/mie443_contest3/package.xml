@@ -12,6 +12,10 @@
   <build_depend>opencv2</build_depend>
   <build_depend>sensor_msgs</build_depend>
 
+  <build_depend>roscpp</build_depend>
+  <exec_depend>roscpp</exec_depend>
+
+
   <run_depend>cv_bridge</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>message_runtime</run_depend>

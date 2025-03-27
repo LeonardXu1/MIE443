@@ -3,6 +3,9 @@
 #include <imageTransporter.hpp>
 #include <chrono>
 
+#include "color_detector.h"
+
+
 using namespace std;
 
 geometry_msgs::Twist follow_cmd;
@@ -22,6 +25,9 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "image_listener");
 	ros::NodeHandle nh;
+
+	ColorDetector colorDetector(nh);
+
 	sound_play::SoundClient sc;
 	string path_to_sounds = ros::package::getPath("mie443_contest3") + "/sounds/";
 	teleController eStop;
@@ -57,6 +63,12 @@ int main(int argc, char **argv)
 
 	while(ros::ok() && secondsElapsed <= 480){		
 		ros::spinOnce();
+
+		if (colorDetector.isColorTriggered())
+        {
+            ROS_INFO("Blue color detected for 5 frames in a row!");
+            // 🔁 Do something here like state change, robot behavior, etc.
+        }
 
 		if(world_state == 0){
 			//fill with your code
