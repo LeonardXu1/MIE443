@@ -34,15 +34,47 @@ void ColorDetector::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 
 bool ColorDetector::detectBlue(const cv::Mat& image)
 {
-    cv::Mat hsv, mask;
+    cv::Mat hsv;
     cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
-    cv::Scalar lowerBlue(100, 150, 50);
-    cv::Scalar upperBlue(140, 255, 255);
-    cv::inRange(hsv, lowerBlue, upperBlue, mask);
 
-    int nonZero = cv::countNonZero(mask);
-    return nonZero > 500;  // Can tweak this threshold
+    // Define color ranges in HSV
+    cv::Scalar lowerBlue(100, 150, 50), upperBlue(140, 255, 255);
+    cv::Scalar lowerRed1(0, 100, 100), upperRed1(10, 255, 255);
+    cv::Scalar lowerRed2(160, 100, 100), upperRed2(179, 255, 255);
+    cv::Scalar lowerGreen(40, 70, 70), upperGreen(80, 255, 255);
+    cv::Scalar lowerYellow(20, 100, 100), upperYellow(30, 255, 255);
+
+    // Create masks
+    cv::Mat blueMask, redMask1, redMask2, redMask, greenMask, yellowMask;
+    cv::inRange(hsv, lowerBlue, upperBlue, blueMask);
+    cv::inRange(hsv, lowerRed1, upperRed1, redMask1);
+    cv::inRange(hsv, lowerRed2, upperRed2, redMask2);
+    redMask = redMask1 | redMask2;
+    cv::inRange(hsv, lowerGreen, upperGreen, greenMask);
+    cv::inRange(hsv, lowerYellow, upperYellow, yellowMask);
+
+    // Count pixels
+    int blueCount = cv::countNonZero(blueMask);
+    int redCount = cv::countNonZero(redMask);
+    int greenCount = cv::countNonZero(greenMask);
+    int yellowCount = cv::countNonZero(yellowMask);
+
+    // Determine the dominant color
+    std::string detectedColor = "none";
+    int maxCount = 0;
+
+    if (blueCount > maxCount) { maxCount = blueCount; detectedColor = "blue"; }
+    if (redCount > maxCount)  { maxCount = redCount;  detectedColor = "red"; }
+    if (greenCount > maxCount){ maxCount = greenCount;detectedColor = "green"; }
+    if (yellowCount > maxCount){ maxCount = yellowCount; detectedColor = "yellow"; }
+
+    // Print result
+    ROS_INFO_STREAM("Detected color: " << detectedColor << " (Pixels: " << maxCount << ")");
+
+    // Return true only for blue (still your main trigger)
+    return (blueCount > 500);
 }
+
 
 bool ColorDetector::isColorTriggered() const
 {
