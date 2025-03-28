@@ -42,14 +42,14 @@ void blockBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
     if (step == 0){
         savePos();
         takeStep();
-        ROS_INFO("Bumper Pressed");
+     
     }
     else if (step == 1){
-        taskComplete = moveDistance(0.1, SLOW_LINEAR, BACKWARD);
+        sleep(2)
 
-        if (taskComplete){
+       // if (taskComplete){
             takeStep();
-        }
+        //}
     }
     else if (step == 2){
 		if(soundPlayed==false){

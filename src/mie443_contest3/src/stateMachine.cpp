@@ -1,7 +1,7 @@
 #include "../include/stateMachine.h"
 
 // defines the possible robot states and priority
-map<string, int> state = {{"BLOCKED_STATE", 0}, {"LOSING_TRACK_STATE", 1}, {"LIFTED_STATE", 2}, {"ANNOYED_STATE", 2},{"FOLLOWING_STATE", 2}, {"CYCLE_STATE", 3}};
+map<string, int> state = {{"BLOCKED_STATE", 0}, {"LOSING_TRACK_STATE", 1}, {"ANNOY_STATE", 1},{"LIFTED_STATE", 2}, {"ANNOYED_STATE", 2},{"FOLLOWING_STATE", 2}, {"CYCLE_STATE", 3}};
 
 string curState = "FOLLOWING_STATE"; // current state of robot
 int step = 0;
@@ -54,6 +54,9 @@ void setState(string newState){
         }
         else if(newState == "LIFTED_STATE"){
             curState = "LIFTED_STATE";
+        }
+        else if(newState == "ANNOY_STATE"){
+            curState = "ANNOY_STATE";
         }
         else if(newState == "FOLLOWING_STATE"){
             curState = "FOLLOWING_STATE";

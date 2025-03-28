@@ -6,6 +6,7 @@
 #include <stateMachine.h>
 #include <blocked.h>
 #include <string.h>
+#include <annoyes.h>
 using namespace std;
 
 geometry_msgs::Twist follow_cmd;
@@ -32,7 +33,7 @@ string world_state;
 
 
 //  Logic for changing states
-void decisionMaker()
+void decisionMaker(double time)
 {
     string currentState = getState();
     if (isBumperPressed() == true){ // checks if any bumpers are pressed
@@ -42,9 +43,10 @@ void decisionMaker()
     // else if (currentState != STUCK_STATE && checkIfStuck(getAbsPos(), timeElapsed) == true){
     //     setState("STUCK_STATE");
     // }
-    // if (isNewSpace() == true){ 
-    //     setState("ROTATION_STATE");
-    // }
+    else if (checkMovement() == true){ 
+      setState("ANNOY_STATE");
+	  return;
+     }
 	else{
 		setState("FOLLOWING_STATE");
 	}
@@ -104,7 +106,7 @@ int main(int argc, char **argv)
 
 	while(ros::ok() && secondsElapsed <= 480){		
 		ros::spinOnce();
-		decisionMaker();
+		decisionMaker(timeElapsed);
 		world_state = getState();
 		if(world_state == "FOLLOWING_STATE"){
 			//fill with your code
@@ -121,6 +123,10 @@ int main(int argc, char **argv)
 			...
 			...
 			*/
+		}
+		else if(world_state == "ANNOY_STATE"){
+			zigzagBehaviour(sc,vel_pub);
+	
 		}
 		secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
 		loop_rate.sleep();
