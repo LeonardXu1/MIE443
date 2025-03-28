@@ -43,7 +43,7 @@ void decisionMaker(double time)
     // else if (currentState != STUCK_STATE && checkIfStuck(getAbsPos(), timeElapsed) == true){
     //     setState("STUCK_STATE");
     // }
-    else if (checkMovement() == true){ 
+    else if (checkMovement(time,follow_cmd) == true){ 
       setState("ANNOY_STATE");
 	  return;
      }
@@ -106,7 +106,8 @@ int main(int argc, char **argv)
 
 	while(ros::ok() && secondsElapsed <= 480){		
 		ros::spinOnce();
-		decisionMaker(timeElapsed);
+
+		decisionMaker(timeElapsed,);
 		world_state = getState();
 		if(world_state == "FOLLOWING_STATE"){
 			//fill with your code
