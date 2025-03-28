@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 	while(ros::ok() && secondsElapsed <= 480){		
 		ros::spinOnce();
 
-		decisionMaker(timeElapsed,);
+		decisionMaker(secondsElapsed);
 		world_state = getState();
 		if(world_state == "FOLLOWING_STATE"){
 			//fill with your code

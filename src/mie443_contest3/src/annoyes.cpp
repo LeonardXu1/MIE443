@@ -64,6 +64,7 @@ bool checkMovement(double timeElapsed,const geometry_msgs::Twist& cmd){
     return false;
 }
 
+bool soundPlayed_ = false;
 void zigzagBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
     bool taskComplete;
     int step = getStep();
@@ -81,9 +82,9 @@ void zigzagBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
         //}
     }
     else if (step == 2){
-		if(soundPlayed==false){
+		if(soundPlayed_==false){
 			sc.playWave("/home/thursday2023/catkin_ws/src/mie443_contest3/sounds/sound.wav");
-			soundPlayed=true;
+			soundPlayed_=true;
 		}
         sleep(3);
 		sc.stopWave("/home/thursday2023/catkin_ws/src/mie443_contest3/sounds/sound.wav");

@@ -45,7 +45,7 @@ void blockBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
      
     }
     else if (step == 1){
-        sleep(2)
+        sleep(2);
 
        // if (taskComplete){
             takeStep();
