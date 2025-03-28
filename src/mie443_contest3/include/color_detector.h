@@ -19,7 +19,7 @@ private:
 
     bool colorTriggered_;
     int detectionCount_;
-    const int detectionThreshold_ = 5;  // Number of consecutive detections required
+    const int detectionThreshold_ = 1;  // Number of consecutive detections required
 
     void imageCallback(const sensor_msgs::ImageConstPtr& msg);
     bool detectBlue(const cv::Mat& image);

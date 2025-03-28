@@ -2,7 +2,7 @@
 
 ColorDetector::ColorDetector(ros::NodeHandle& nh) : it_(nh), detectionCount_(0), colorTriggered_(false)
 {
-    sub_ = it_.subscribe("/webcam/image_raw", 1, &ColorDetector::imageCallback, this);
+    sub_ = it_.subscribe("/webcam/rgb/image_raw", 1, &ColorDetector::imageCallback, this);
 }
 
 void ColorDetector::imageCallback(const sensor_msgs::ImageConstPtr& msg)

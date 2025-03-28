@@ -45,8 +45,8 @@ int main(int argc, char **argv)
     start = std::chrono::system_clock::now();
     uint64_t secondsElapsed = 0;
 
-	imageTransporter rgbTransport("camera/image/", sensor_msgs::image_encodings::BGR8); //--for Webcam
-	//imageTransporter rgbTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //--for turtlebot Camera
+	// imageTransporter rgbTransport("camera/image/", sensor_msgs::image_encodings::BGR8); //--for Webcam
+	imageTransporter rgbTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //--for turtlebot Camera
 	imageTransporter depthTransport("camera/depth_registered/image_raw", sensor_msgs::image_encodings::TYPE_32FC1);
 
 	int world_state = 0;
@@ -70,17 +70,17 @@ int main(int argc, char **argv)
             // 🔁 Do something here like state change, robot behavior, etc.
         }
 
-		if(world_state == 0){
-			//fill with your code
-			//vel_pub.publish(vel);
-			vel_pub.publish(follow_cmd);
+		// if(world_state == 0){
+		// 	//fill with your code
+		// 	//vel_pub.publish(vel);
+		// 	vel_pub.publish(follow_cmd);
 
-		}else if(world_state == 1){
-			/*
-			...
-			...
-			*/
-		}
+		// }else if(world_state == 1){
+		// 	/*
+		// 	...
+		// 	...
+		// 	*/
+		// }
 		secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
 		loop_rate.sleep();
 	}
