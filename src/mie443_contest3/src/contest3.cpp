@@ -11,25 +11,6 @@ using namespace std;
 
 geometry_msgs::Twist follow_cmd;
 string world_state;
-// void runBehaviour(string curState)
-// {
-//     if (curState == "BLOCKED_STATE")
-//     {
-//         blockBehaviour();
-//     }
-//     // else if (curState == "STUCK_STATE")
-//     // {
-//     //     stuckBehaviour();
-//     // }
-//     // else if (curState == "ROTATION_STATE")
-//     // {
-//     //     rotateBehaviour();
-//     // }
-//     else if (curState == "EXPLORE_STATE")
-//     {
-//         scanningBehaviour();
-//     }
-// }
 
 
 //  Logic for changing states
@@ -38,20 +19,21 @@ void decisionMaker(double time)
     string currentState = getState();
     if (isBumperPressed() == true){ // checks if any bumpers are pressed
         setState("BLOCKED_STATE");
-		return;
     }
-    // else if (currentState != STUCK_STATE && checkIfStuck(getAbsPos(), timeElapsed) == true){
-    //     setState("STUCK_STATE");
-    // }
+	else if (follow_cmd.linear.x == 0  && follow_cmd.angular.z == 0){
+		setState("LOSING_TRACK_STATE");
+	}
     else if (checkMovement(time,follow_cmd) == true){ 
       setState("ANNOY_STATE");
-	  return;
      }
 	else{
 		setState("FOLLOWING_STATE");
 	}
     
 }
+
+
+
 void followerCB(const geometry_msgs::Twist msg){
     follow_cmd = msg;
 }
@@ -67,6 +49,10 @@ void followerCB(const geometry_msgs::Twist msg){
 
 //-------------------------------------------------------------
 
+
+void lostBehaviour(){
+
+}
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "image_listener");
@@ -124,9 +110,13 @@ int main(int argc, char **argv)
 			...
 			...
 			*/
+		}else if(world_state == "LOSING_TRACK_STATE"){
+			if(follow_cmd.linear.x > 0 || follow_cmd.angular.z > 0){
+				resetState();
+			}
 		}
 		else if(world_state == "ANNOY_STATE"){
-			zigzagBehaviour(sc,vel_pub);
+			zigzagBehaviour(sc, vel_pub);
 	
 		}
 		secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
