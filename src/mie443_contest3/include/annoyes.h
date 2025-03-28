@@ -6,3 +6,7 @@
 #include <rConfig.h>
 #include <stateMachine.h>
 #include <header.h>
+
+bool checkMovement(double timeElapsed,const geometry_msgs::Twist& cmd);
+void zigzagBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub);
+#endif
