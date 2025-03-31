@@ -6,11 +6,31 @@
 #include <stateMachine.h>
 #include <blocked.h>
 #include <string.h>
+#include <lifted.h>
 #include <annoyes.h>
 using namespace std;
 
 geometry_msgs::Twist follow_cmd;
 string world_state;
+// void runBehaviour(string curState)
+// {
+//     if (curState == "BLOCKED_STATE")
+//     {
+//         blockBehaviour();
+//     }
+//     // else if (curState == "STUCK_STATE")
+//     // {
+//     //     stuckBehaviour();
+//     // }
+//     // else if (curState == "ROTATION_STATE")
+//     // {
+//     //     rotateBehaviour();
+//     // }
+//     else if (curState == "EXPLORE_STATE")
+//     {
+//         scanningBehaviour();
+//     }
+// }
 
 
 //  Logic for changing states
@@ -19,21 +39,24 @@ void decisionMaker(double time)
     string currentState = getState();
     if (isBumperPressed() == true){ // checks if any bumpers are pressed
         setState("BLOCKED_STATE");
+		return;
     }
-	else if (follow_cmd.linear.x == 0  && follow_cmd.angular.z == 0){
-		setState("LOSING_TRACK_STATE");
+    // else if (currentState != STUCK_STATE && checkIfStuck(getAbsPos(), timeElapsed) == true){
+    //     setState("STUCK_STATE");
+    // }
+    // else if (checkMovement(time,follow_cmd) == true){ 
+    //   setState("ANNOY_STATE");
+	//   return;
+    //  }
+	if (isLifted()){
+		setState("LIFTED_STATE");
+		return;
 	}
-    else if (checkMovement(time,follow_cmd) == true){ 
-      setState("ANNOY_STATE");
-     }
 	else{
 		setState("FOLLOWING_STATE");
 	}
     
 }
-
-
-
 void followerCB(const geometry_msgs::Twist msg){
     follow_cmd = msg;
 }
@@ -49,10 +72,6 @@ void followerCB(const geometry_msgs::Twist msg){
 
 //-------------------------------------------------------------
 
-
-void lostBehaviour(){
-
-}
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "image_listener");
@@ -68,6 +87,7 @@ int main(int argc, char **argv)
 	ros::Subscriber follower = nh.subscribe("follower_velocity_smoother/smooth_cmd_vel", 10, &followerCB);
 	ros::Subscriber bumper = nh.subscribe("mobile_base/events/bumper", 10, &bumperCB);
 	ros::Subscriber odom = nh.subscribe("odom", 1, &odomCallback);
+	ros::Subscriber cliff_sub = nh.subscribe("mobile_base/events/cliff", 10, &cliffCallback);
 
     // contest count down timer
 	ros::Rate loop_rate(10);
@@ -110,15 +130,20 @@ int main(int argc, char **argv)
 			...
 			...
 			*/
-		}else if(world_state == "LOSING_TRACK_STATE"){
-			if(follow_cmd.linear.x > 0 || follow_cmd.angular.z > 0){
-				resetState();
-			}
 		}
-		else if(world_state == "ANNOY_STATE"){
-			zigzagBehaviour(sc, vel_pub);
+		// else if(world_state == "ANNOY_STATE"){
+		// 	zigzagBehaviour(sc,vel_pub);
 	
-		}
+		// }
+		
+		else if (world_state == "LIFTED_STATE"){
+            liftedBehaviour(sc,vel_pub);
+			
+            velS velocity = getVelocity();
+            vel.angular.z = velocity.angular;
+            vel.linear.x = velocity.linear;
+            vel_pub.publish(vel);
+        }
 		secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
 		loop_rate.sleep();
 	}

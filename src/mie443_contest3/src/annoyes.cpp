@@ -8,8 +8,8 @@ double lastDirectionChangeTime = 0;
 bool wasMovingLeft = false;
 bool wasMovingRight = false;
 
-const double ZIGZAG_TIME_WINDOW = 15.0;     //should be able to detect for consecutive change direction happen in 15s   
-const double ANGULAR_THRESHOLD = 0.15;         
+const double ZIGZAG_TIME_WINDOW = 150.0;     //should be able to detect for consecutive change direction happen in 15s   
+const double ANGULAR_THRESHOLD = 0.01;         
 const int DIRECTION_CHANGES_THRESHOLD = 6; //if changes 3 times each side total
 bool checkMovement(double timeElapsed,const geometry_msgs::Twist& cmd){
     bool isMovingRight = (cmd.angular.z > ANGULAR_THRESHOLD);
