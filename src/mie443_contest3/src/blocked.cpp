@@ -42,20 +42,23 @@ void blockBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
     if (step == 0){
         savePos();
         takeStep();
+        soundplayed = false;
      
     }
     else if (step == 1){
-        sleep(2);
-
-       // if (taskComplete){
-            takeStep();
-        //}
-    }
-    else if (step == 2){
 		if(soundPlayed==false){
-			sc.playWave("/home/thursday2023/catkin_ws/src/mie443_contest3/sounds/sound.wav");
+			sc.playWave("/home/thursday2023/catkin_ws/src/mie443_contest3/sounds/bruhh.wav");
 			soundPlayed=true;
 		}
+        //quick pause to make the robot seem like its in shock
+        ros::Duration(1).sleep();
+
+        //basic evasive manuver
+        vel.angular.z = 0.3;
+        vel.linear.x = -0.4;
+        vel_pub.publish(vel);
+
+
         sleep(3);
 		sc.stopWave("/home/thursday2023/catkin_ws/src/mie443_contest3/sounds/sound.wav");
 		takeStep();

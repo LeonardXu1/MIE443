@@ -49,10 +49,6 @@ void followerCB(const geometry_msgs::Twist msg){
 
 //-------------------------------------------------------------
 
-
-void lostBehaviour(){
-
-}
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "image_listener");
