@@ -42,7 +42,7 @@ void blockBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
     if (step == 0){
         savePos();
         takeStep();
-        soundplayed = false;
+        bool soundplayed = false;
      
     }
     else if (step == 1){
@@ -54,8 +54,11 @@ void blockBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
         ros::Duration(1).sleep();
 
         //basic evasive manuver
-        vel.angular.z = 0.3;
-        vel.linear.x = -0.4;
+        vel.angular.z = 0.4;
+        vel.linear.x = -0.25;
+        vel_pub.publish(vel);
+        vel.angular.z = -0.2;
+        vel.linear.x = -0.1;
         vel_pub.publish(vel);
 
 

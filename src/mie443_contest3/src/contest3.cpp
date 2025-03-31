@@ -12,6 +12,38 @@ using namespace std;
 geometry_msgs::Twist follow_cmd;
 string world_state;
 
+float counterZigZag = 0;
+float storeAngular = 0;
+uint64_t storeTime = 0;
+
+bool detectZigZag(double time){
+	float angular = follow_cmd.angular.z;
+
+	// checks if change in direction
+	if((storeAngular > 0 and angular < 0) or (storeAngular < 0 and angular > 0)){
+		if(angular > 0.03 || angular < -0.03){
+			counterZigZag += 1;
+			ROS_INFO("Zig Zag Zount: %f", counterZigZag);
+		}
+	}
+	// checks if zigzagging is true
+	if(counterZigZag >= 5){
+		counterZigZag = 0;
+		storeAngular = angular;
+		storeTime = time;
+		return true;
+	}
+	
+	// checks how much time has past
+	if(time - storeTime > 20){
+		ROS_INFO("Reset Zig Zag Counter");
+		counterZigZag = 0;
+		storeTime = time;
+	}
+	storeAngular = angular;
+	return false;
+}
+
 
 //  Logic for changing states
 void decisionMaker(double time)
@@ -23,13 +55,12 @@ void decisionMaker(double time)
 	else if (follow_cmd.linear.x == 0  && follow_cmd.angular.z == 0){
 		setState("LOSING_TRACK_STATE");
 	}
-    else if (checkMovement(time,follow_cmd) == true){ 
+    else if (detectZigZag(time)){ 
       setState("ANNOY_STATE");
-     }
+    }
 	else{
 		setState("FOLLOWING_STATE");
-	}
-    
+	}    
 }
 
 
@@ -88,7 +119,6 @@ int main(int argc, char **argv)
 
 	while(ros::ok() && secondsElapsed <= 480){		
 		ros::spinOnce();
-
 		decisionMaker(secondsElapsed);
 		world_state = getState();
 		if(world_state == "FOLLOWING_STATE"){
@@ -112,8 +142,7 @@ int main(int argc, char **argv)
 			}
 		}
 		else if(world_state == "ANNOY_STATE"){
-			zigzagBehaviour(sc, vel_pub);
-	
+			resetState();
 		}
 		secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
 		loop_rate.sleep();

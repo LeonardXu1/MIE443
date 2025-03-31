@@ -1,68 +1,4 @@
 #include "annoyes.h"
-int turnLeftCount = 0;
-int turnRightCount = 0;
-bool isZigZagDetected = false;
-double zigZagStartTime = 0;
-double lastZigZagDetectionTime = 0;
-double lastDirectionChangeTime = 0;
-bool wasMovingLeft = false;
-bool wasMovingRight = false;
-
-const double ZIGZAG_TIME_WINDOW = 15.0;     //should be able to detect for consecutive change direction happen in 15s   
-const double ANGULAR_THRESHOLD = 0.15;         
-const int DIRECTION_CHANGES_THRESHOLD = 6; //if changes 3 times each side total
-bool checkMovement(double timeElapsed,const geometry_msgs::Twist& cmd){
-    bool isMovingRight = (cmd.angular.z > ANGULAR_THRESHOLD);
-    bool isMovingLeft = (cmd.angular.z < -ANGULAR_THRESHOLD);
-    
-    
-    if (zigZagStartTime == 0 && (isMovingLeft || isMovingRight)) {
-        zigZagStartTime = timeElapsed;
-        wasMovingLeft = isMovingLeft;
-        wasMovingRight = isMovingRight;
-        return false;
-    }//start counting
-    
-    
-    if ((isMovingRight && wasMovingLeft) || (isMovingLeft && wasMovingRight)) {
-       
-        if (isMovingRight) {
-            turnRightCount++;
-            ROS_INFO("Right turn detected, count: %d", turnRightCount);
-        }
-        if (isMovingLeft) {
-            turnLeftCount++;
-            ROS_INFO("Left turn detected, count: %d", turnLeftCount);
-        }
-        
-      
-        lastDirectionChangeTime = timeElapsed;
-        
-  
-        int totalDirectionChanges = turnLeftCount + turnRightCount;
-        double timeWindow = timeElapsed - zigZagStartTime;
-        
-        if (timeWindow <= ZIGZAG_TIME_WINDOW && totalDirectionChanges >= DIRECTION_CHANGES_THRESHOLD) {//detect after time threshold and direction threshold
-            ROS_INFO("prob zigzag, %d direction changes in %.1f seconds",totalDirectionChanges, timeWindow);
-            isZigZagDetected = true;
-            lastZigZagDetectionTime = timeElapsed;
-            return true;
-        }
-    }
-    
-
-    wasMovingLeft = isMovingLeft;
-    wasMovingRight = isMovingRight;
-    
-    if (timeElapsed - zigZagStartTime > ZIGZAG_TIME_WINDOW) {
-        ROS_INFO("Resetting zigzag detection, time window expired");
-        turnLeftCount = 0;
-        turnRightCount = 0;
-        zigZagStartTime = (isMovingLeft || isMovingRight) ? timeElapsed : 0;//rest if no consecutive movement detect in certain period 
-    }
-    
-    return false;
-}
 
 bool soundPlayed_ = false;
 void zigzagBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
@@ -118,9 +54,7 @@ void zigzagBehaviour(sound_play::SoundClient &sc, ros::Publisher &vel_pub){
                 }
     }
     else {
-        isZigZagDetected = false;
-        turnLeftCount = 0;
-        turnRightCount = 0;
+
         resetState();
     }
 }
