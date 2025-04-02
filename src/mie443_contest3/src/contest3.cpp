@@ -4,9 +4,11 @@
 #include <chrono>
 #include <movement.h>
 #include <stateMachine.h>
+#include <rConfig.h>
 #include <string.h>
 #include <kobuki_msgs/BumperEvent.h>
 #include <kobuki_msgs/CliffEvent.h>
+#include <opencv2/opencv.hpp>
 using namespace std;
 
 geometry_msgs::Twist follow_cmd;
@@ -125,6 +127,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;
 	sound_play::SoundClient sc;
 	string path_to_sounds = ros::package::getPath("mie443_contest3") + "/sounds/";
+	string path_to_images = ros::package::getPath("mie443_contest3") + "/images/";
 	teleController eStop;
 
 	//publishers
@@ -144,12 +147,14 @@ int main(int argc, char **argv)
 
 	imageTransporter rgbTransport("camera/image/", sensor_msgs::image_encodings::BGR8); //--for Webcam
 	//imageTransporter rgbTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //--for turtlebot Camera
-	imageTransporter depthTransport("camera/depth_registered/image_raw", sensor_msgs::image_encodings::TYPE_32FC1);
+	imageTransporter depthTransport("camera/depth_registered/image_raw", sensor_msgs::image_encodings::TYPE_32FC1);\
 
+	double angular = 0.2;
+	double linear = 0.0;
 
 	geometry_msgs::Twist vel;
-	vel.angular.z = 0.0;
-	vel.linear.x = 0.0;
+	vel.angular.z = angular;
+	vel.linear.x = linear;
 
 	sc.playWave(path_to_sounds + "sound.wav");
 	ros::Duration(0.5).sleep();
@@ -159,23 +164,184 @@ int main(int argc, char **argv)
 
 		decisionMaker(secondsElapsed);
 		world_state = getState();
+		int step = getStep();
 
-		
+		if(world_state == "BUMPER_STATE"){		// EMOTION: DISGUST
+			if(step == 0){
+				// Play Sound
+				sc.playWave(path_to_sounds+"gasp.wav");
+
+				// Show Image
+				cv::Mat image = cv::imread(path_to_images+"suprise.jpg", cv::IMREAD_COLOR);
+				std::string windowName = "Image";
+				cv::namedWindow(windowName, cv::WINDOW_NORMAL);
+				cv::setWindowProperty(windowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+				cv::imshow(windowName, image);
+
+				cv::waitKey(100);
+
+				takeStep();
+			}
+			else if(step == 1){
+				savePos();
+				takeStep();
+			}
+			else if(step == 2){
+				float taskCompleted = moveDistance(0.5, 0.25, BACKWARD);
+
+				if(taskCompleted){
+					takeStep();
+				}
+			}
+			else if(step == 3){
+				sleep(1);
+				cv::destroyAllWindows();
+				sc.stopWave(path_to_sounds+"gasp.wav");
+				sleep(1);
+				resetState();
+			}
+		}
+		else if(world_state == "LIFTED_STATE"){		// EMOTION: SCARED
+			sc.playWave(path_to_sounds+"scream.wav");
+
+			// Show Image
+			cv::Mat image = cv::imread(path_to_images+"scared.jpg", cv::IMREAD_COLOR);
+			std::string windowName = "Image";
+			cv::namedWindow(windowName, cv::WINDOW_NORMAL);
+			cv::setWindowProperty(windowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+			cv::imshow(windowName, image);
+
+			cv::waitKey(3000);
+
+			cv::destroyAllWindows();
+			sc.stopWave(path_to_sounds+"scream.wav");
+
+			sleep(1);
+
+			if(!isLifted()){
+				resetState();
+			}
+		}
+		else if(world_state == "LOST_STATE"){		// EMOTION: SAD
+			if(step == 0){
+				// Play Sound
+				sc.playWave(path_to_sounds+"darkness.wav");
+
+				// Show Image
+				cv::Mat image = cv::imread(path_to_images+"sad.jpg", cv::IMREAD_COLOR);
+				std::string windowName = "Image";
+				cv::namedWindow(windowName, cv::WINDOW_NORMAL);
+				cv::setWindowProperty(windowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+				cv::imshow(windowName, image);
+
+				cv::waitKey(100);
+
+				takeStep();
+			}
+			else if(step == 1){
+				savePos();
+				takeStep();
+			}
+			else if(step == 2){
+				float taskCompleted = moveAngle(1, SLOW_ANGULAR, CW);
+
+				if(taskCompleted){
+					takeStep();
+				}
+			}
+			else if(step == 3){
+				savePos();
+				takeStep();
+			}
+			else if(step == 4){
+				float taskCompleted = moveAngle(2, SLOW_ANGULAR, CCW);
+
+				if(taskCompleted){
+					takeStep();
+				}
+			}
+			else if(step == 5){
+				savePos();
+				takeStep();
+			}
+			else if(step == 6){
+				float taskCompleted = moveAngle(1, SLOW_ANGULAR, CW);
+
+				if(taskCompleted){
+					takeStep();
+				}
+			}
+			else if(step == 7){
+				sleep(2);
+				cv::destroyAllWindows();
+				sc.stopWave(path_to_sounds+"darkness.wav");
+				sleep(1);
+				takeStep();
+			}
+			else if(step == 8){
+				if(follow_cmd.linear.x > 0 || follow_cmd.angular.z > 0){
+					resetState();
+				}
+			}
+		}
+		else if(world_state == "ZIGZAG_STATE"){		// EMOTION: DISCONTENT
+			if(step == 0){
+				// Play Sound
+				sc.playWave(path_to_sounds+"bruh.wav");
+
+				// Show Image
+				cv::Mat image = cv::imread(path_to_images+"discontent.jpg", cv::IMREAD_COLOR);
+				std::string windowName = "Image";
+				cv::namedWindow(windowName, cv::WINDOW_NORMAL);
+				cv::setWindowProperty(windowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+				cv::imshow(windowName, image);
+
+				cv::waitKey(100);
+
+				takeStep();
+			}
+			else if(step == 1){
+				savePos();
+				takeStep();
+			}
+			else if(step == 2){
+				float taskCompleted = moveDistance(0.1, 0.15, BACKWARD);
+
+				if(taskCompleted){
+					takeStep();
+				}
+			}
+			else if(step == 3){
+				savePos();
+				takeStep();
+			}
+			else if(step == 4){
+				float taskCompleted = moveDistance(0.1, 0.12, FORWARD);
+
+				if(taskCompleted){
+					takeStep();
+				}
+			}
+			else if(step == 5){
+				cv::destroyAllWindows();
+				sc.stopWave(path_to_sounds+"bruh.wav");
+				sleep(1);
+				resetState();
+			}
+		}
+
+		// Sets Velocity
 		if(world_state == "FOLLOW_STATE"){
 			vel_pub.publish(follow_cmd);
 		}
-		else if(world_state == "BUMPER_STATE"){
-			resetState();
+		else{
+			velS velocity = getVelocity();
+
+			vel.linear.x = velocity.linear;
+			vel.angular.z = velocity.angular;
+			vel_pub.publish(vel);
 		}
-		else if(world_state == "LIFT_STATE"){
-			resetState();
-		}
-		else if(world_state == "LOST_STATE"){
-			resetState();
-		}
-		else if(world_state == "ZIGZAG_STATE"){
-			resetState();
-		}
+
 
 		secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
 		loop_rate.sleep();

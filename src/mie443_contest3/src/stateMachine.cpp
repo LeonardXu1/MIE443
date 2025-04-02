@@ -27,13 +27,12 @@ void resetState(){
 }
 
 int getStep(){
-    ROS_INFO("Step: %i", step);
     return step;
 }
 
 void takeStep(){
     step++;
-    // ROS_INFO("Step: %i", step);
+    ROS_INFO("Step: %i", step);
 }
 
 void overrideStep(int newStep){

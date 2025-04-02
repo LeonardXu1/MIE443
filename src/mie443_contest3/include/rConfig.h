@@ -1,5 +1,4 @@
 
-
 #ifndef ROBOT_CONFIG
 #define ROBOT_CONFIG
 
@@ -26,8 +25,6 @@ const float FAST_LINEAR = 0.18; // must not exceed 0.25m/s
 const float SLOW_ANGULAR = M_PI/5;
 const float FAST_ANGULAR = M_PI/4; // must not exceed PI/3rad/s
 
-
-
 // Threshold for Distance from last 360 Rotation
 const float NEW_SPACE_THRESHOLD = 2;
 
@@ -46,6 +43,3 @@ struct posS {
 typedef struct posS posS;
 
 #endif
-
-
-
