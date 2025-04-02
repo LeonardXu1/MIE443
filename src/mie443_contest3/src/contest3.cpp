@@ -4,13 +4,17 @@
 #include <chrono>
 #include <movement.h>
 #include <stateMachine.h>
-#include <blocked.h>
 #include <string.h>
-#include <annoyes.h>
+#include <kobuki_msgs/BumperEvent.h>
+#include <kobuki_msgs/CliffEvent.h>
 using namespace std;
 
 geometry_msgs::Twist follow_cmd;
+uint8_t bumpers[3] = {kobuki_msgs::BumperEvent::RELEASED, kobuki_msgs::BumperEvent::RELEASED, kobuki_msgs::BumperEvent::RELEASED};
+int cliffs[3] = {0, 0, 0};
 string world_state;
+
+/*	----------	EMOTION TRIGGERS	----------	*/
 
 float counterZigZag = 0;
 float storeAngular = 0;
@@ -44,41 +48,76 @@ bool detectZigZag(double time){
 	return false;
 }
 
+bool isBumperPressed(){
+    for (uint32_t b_idx = 0; b_idx < N_BUMPER; ++b_idx)
+    {
+        if (bumpers[b_idx] == kobuki_msgs::BumperEvent::PRESSED)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
-//  Logic for changing states
-void decisionMaker(double time)
-{
-    string currentState = getState();
-    if (isBumperPressed() == true){ // checks if any bumpers are pressed
-        setState("BLOCKED_STATE");
+bool isLifted(){
+    // ROS_INFO("cliffs 1 %d | cliffs 2 %d | cliffs 3 %d",cliffs[0], cliffs[1],cliffs[2]);
+    if (cliffs[0] == 1 || cliffs[1] == 1 || cliffs[2] == 1){
+        return true;
     }
-	else if (follow_cmd.linear.x == 0  && follow_cmd.angular.z == 0){
-		setState("LOSING_TRACK_STATE");
+	return false;
+}
+
+bool isLost(){
+	if(follow_cmd.linear.x == 0  && follow_cmd.angular.z == 0){
+		return true;
 	}
-    else if (detectZigZag(time)){ 
-      setState("ANNOY_STATE");
-    }
-	else{
-		setState("FOLLOWING_STATE");
-	}    
+	return false;
 }
 
 
+
+/*	----------	DECISION MAKER	----------	*/
+
+void decisionMaker(double time){
+    string currentState = getState();
+    if(isBumperPressed()){
+        setState("BUMPER_STATE");
+    }
+	else if(isLifted()){
+		setState("LIFTED_STATE");
+	}
+	else if(detectZigZag(time)){ 
+		setState("ZIGZAG_STATE");
+	}
+	else if(isLost()){
+		setState("LOST_STATE");
+	}
+	else{
+		setState("FOLLOW_STATE");
+	}
+}
+
+
+
+/*	----------	ROS CALLBACKS	----------	*/
 
 void followerCB(const geometry_msgs::Twist msg){
     follow_cmd = msg;
 }
 
-// void bumperCB(const geometry_msgs::Twist msg){
-//     //Fill with code
-// 	if(msg.state==kobuki_msgs::BumperEvent::PRESSED){
-// 		world_state=1;
-		
+void bumperCB(const kobuki_msgs::BumperEvent::ConstPtr &msg){
+	bumpers[msg->bumper] = msg->state;
+}
 
-// 	}
-// }
+void cliffCB(const kobuki_msgs::CliffEvent::ConstPtr& msg){
+	cliffs[msg->sensor] = msg->state;
+}
 
-//-------------------------------------------------------------
+/*	----------	EMOTION BEHAVIOURS	----------	*/
+
+
+
+/*	----------	MAIN CODE	----------	*/
 
 int main(int argc, char **argv)
 {
@@ -94,6 +133,7 @@ int main(int argc, char **argv)
 	//subscribers
 	ros::Subscriber follower = nh.subscribe("follower_velocity_smoother/smooth_cmd_vel", 10, &followerCB);
 	ros::Subscriber bumper = nh.subscribe("mobile_base/events/bumper", 10, &bumperCB);
+	ros::Subscriber cliff = nh.subscribe("mobile_base/events/cliff", 10, &cliffCB);
 	ros::Subscriber odom = nh.subscribe("odom", 1, &odomCallback);
 
     // contest count down timer
@@ -107,43 +147,36 @@ int main(int argc, char **argv)
 	imageTransporter depthTransport("camera/depth_registered/image_raw", sensor_msgs::image_encodings::TYPE_32FC1);
 
 
-	double angular = 0.2;
-	double linear = 0.0;
-
 	geometry_msgs::Twist vel;
-	vel.angular.z = angular;
-	vel.linear.x = linear;
+	vel.angular.z = 0.0;
+	vel.linear.x = 0.0;
 
 	sc.playWave(path_to_sounds + "sound.wav");
 	ros::Duration(0.5).sleep();
 
 	while(ros::ok() && secondsElapsed <= 480){		
 		ros::spinOnce();
+
 		decisionMaker(secondsElapsed);
 		world_state = getState();
-		if(world_state == "FOLLOWING_STATE"){
-			//fill with your code
-			//vel_pub.publish(vel);
-			vel_pub.publish(follow_cmd);
 
-		}else if(world_state == "BLOCKED_STATE"){
-			blockBehaviour(sc, vel_pub);
-			velS velocity = getVelocity();
-			vel.angular.z = velocity.angular;
-			vel.linear.x = velocity.linear;
-			vel_pub.publish(vel);
-			/*
-			...
-			...
-			*/
-		}else if(world_state == "LOSING_TRACK_STATE"){
-			if(follow_cmd.linear.x > 0 || follow_cmd.angular.z > 0){
-				resetState();
-			}
+		
+		if(world_state == "FOLLOW_STATE"){
+			vel_pub.publish(follow_cmd);
 		}
-		else if(world_state == "ANNOY_STATE"){
+		else if(world_state == "BUMPER_STATE"){
 			resetState();
 		}
+		else if(world_state == "LIFT_STATE"){
+			resetState();
+		}
+		else if(world_state == "LOST_STATE"){
+			resetState();
+		}
+		else if(world_state == "ZIGZAG_STATE"){
+			resetState();
+		}
+
 		secondsElapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now()-start).count();
 		loop_rate.sleep();
 	}

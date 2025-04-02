@@ -5,9 +5,8 @@
 #include "movement.h"
 #include <map>
 #include <string>
+
 string getState(); // gets the current state
-
-
 
 void resetState();
 
